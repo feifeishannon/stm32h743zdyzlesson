@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "cmsis_os2.h"                  // ::CMSIS:RTOS2
 
 /* USER CODE END Includes */
 
@@ -49,7 +50,15 @@
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void StartMyTask(void *argument)
+{
+  /* Infinite loop */
+  for(;;)
+  {
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+    osDelay(100);
+  }
+}
 /* USER CODE END FunctionPrototypes */
 
 /* Private application code --------------------------------------------------*/
