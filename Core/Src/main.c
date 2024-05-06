@@ -22,6 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "string.h"
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -42,6 +44,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+UART_HandleTypeDef huart1;
+
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
@@ -56,6 +60,20 @@ const osThreadAttr_t myTask01_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for vUartSenderTask */
+osThreadId_t vUartSenderTaskHandle;
+const osThreadAttr_t vUartSenderTask_attributes = {
+  .name = "vUartSenderTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for vUartReceiverTa */
+osThreadId_t vUartReceiverTaHandle;
+const osThreadAttr_t vUartReceiverTa_attributes = {
+  .name = "vUartReceiverTa",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 osThreadId_t myTaskHandle;
 const osThreadAttr_t myTask_attributes = {
@@ -69,11 +87,31 @@ const osThreadAttr_t myTask_attributes = {
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask01(void *argument);
+void Uart1Sender(void *argument);
+void Uart1Receiver(void *argument);
 
 /* USER CODE BEGIN PFP */
 
+struct __FILE 
+{
+  int handle; 
+};
+
+FILE __stdout;
+
+void _sys_exit(int x){
+    x = x;
+}
+
+int fputc(int ch, FILE *f){
+    HAL_UART_Transmit_IT(&huart1,(uint8_t *)&ch,1);
+    while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC) == RESET){}
+    return ch;
+
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -112,6 +150,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -141,6 +180,12 @@ int main(void)
 
   /* creation of myTask01 */
   myTask01Handle = osThreadNew(StartTask01, NULL, &myTask01_attributes);
+
+  /* creation of vUartSenderTask */
+  vUartSenderTaskHandle = osThreadNew(Uart1Sender, NULL, &vUartSenderTask_attributes);
+
+  /* creation of vUartReceiverTa */
+  vUartReceiverTaHandle = osThreadNew(Uart1Receiver, NULL, &vUartReceiverTa_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -232,6 +277,54 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -303,6 +396,49 @@ void StartTask01(void *argument)
     osDelay(1);
   }
   /* USER CODE END StartTask01 */
+}
+
+/* USER CODE BEGIN Header_Uart1Sender */
+/**
+* @brief Function implementing the vUartSenderTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Uart1Sender */
+void Uart1Sender(void *argument)
+{
+  /* USER CODE BEGIN Uart1Sender */
+  /* Infinite loop */
+  for(;;)
+  {
+    printf("USER CODE BEGIN Uart1Sender\r\n");
+    osDelay(1000);
+  }
+  /* USER CODE END Uart1Sender */
+}
+
+/* USER CODE BEGIN Header_Uart1Receiver */
+/**
+* @brief Function implementing the vUartReceiverTa thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Uart1Receiver */
+void Uart1Receiver(void *argument)
+{
+  /* USER CODE BEGIN Uart1Receiver */
+  uint8_t ch;
+  /* Infinite loop */
+  for(;;)
+  {
+    HAL_UART_Receive_IT(&huart1,(uint8_t *)&ch,1);
+    while (HAL_OK != HAL_UART_Receive(&huart1, &ch, 1, 100));
+    
+    printf("Received data %c\r\n",ch);
+    
+    osDelay(1);
+  }
+  /* USER CODE END Uart1Receiver */
 }
 
 /* MPU Configuration */

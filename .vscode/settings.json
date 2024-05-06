@@ -2,6 +2,9 @@
     "files.associations": {
         "task.h": "c",
         "freertos.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "cmsis_os2.h": "c",
+        "cmsis_os.h": "c",
+        "queue.h": "c"
     }
 }
