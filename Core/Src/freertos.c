@@ -55,8 +55,8 @@ void StartMyTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
-    osDelay(100);
+    // HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+    osDelay(1000);
   }
 }
 /* USER CODE END FunctionPrototypes */

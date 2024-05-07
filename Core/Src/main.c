@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 /* USER CODE END Includes */
-
+#include "uart_device.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
@@ -408,11 +408,18 @@ void StartTask01(void *argument)
 void Uart1Sender(void *argument)
 {
   /* USER CODE BEGIN Uart1Sender */
+  uint8_t c;
+  UART_DeviceType *UARTdevice = Get_UART_Device("stm32_uart1");
+  UARTdevice->Init(UARTdevice);
   /* Infinite loop */
   for(;;)
   {
-    printf("USER CODE BEGIN Uart1Sender\r\n");
-    osDelay(1000);
+    UARTdevice->Send(UARTdevice, "请输入数据============>\r\n", 30, 100);
+    while (0 != UARTdevice->Recv(UARTdevice, &c, 100));
+    UARTdevice->Send(UARTdevice, "接收到：", 14, 10);
+    UARTdevice->Send(UARTdevice,  &c, 1, 10);
+    UARTdevice->Send(UARTdevice,  "\r\n", 3, 10);
+    
   }
   /* USER CODE END Uart1Sender */
 }

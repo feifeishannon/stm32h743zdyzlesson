@@ -1,19 +1,20 @@
 #ifndef __UART_DEVICE_H
 #define __UART_DEVICE_H
 
-#include "stm32h7xx_hal.h"
+
 #include "stdint.h"
 
 
-struct UART_Device
+typedef struct UART_Device
 {
     char *name;
-    int (*Init)(int which, int baud, int datas, char parity, int stop);
-    int (*Send)(uint8_t *datas, int len, int timeout_ms);
-    int (*Init)(uint8_t *data, int timeout_ms);
-    UART_HandleTypeDef *handle;
-};
+    int (*Init)(struct UART_Device *pDev);
+    int (*Send)(struct UART_Device *pDev, uint8_t *datas, int len, int timeout_ms);
+    int (*Recv)(struct UART_Device *pDev, uint8_t *data, int timeout_ms);
+    void *priv_data;
+}UART_DeviceType;
 
+UART_DeviceType *Get_UART_Device(char *name);
 
 
 #endif /* __UART_DEVICE_H */
