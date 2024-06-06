@@ -9,7 +9,7 @@
 
 extern UART_HandleTypeDef huart1;
 static int uart_init(UART_DeviceType *pDev);
-static int uart_send(UART_DeviceType *pDev, uint8_t *datas, int len, int timeout_ms);
+static int uart_send(UART_DeviceType *pDev, uint8_t *datas, int timeout_ms);
 static int uart_recv(UART_DeviceType *pDev, uint8_t *data, int timeout_ms);
 
 /***
@@ -55,10 +55,6 @@ UART_DeviceType *Get_UART_Device(char *name){
     return NULL;
 }
 
-
-
-
-
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
     UART_DataType *data;
     if(huart == &huart1) {
@@ -89,8 +85,9 @@ static int uart_init(UART_DeviceType *pDev){
 }
 
 
-static int uart_send(UART_DeviceType *pDev, uint8_t *datas, int len, int timeout_ms){
+static int uart_send(UART_DeviceType *pDev, uint8_t *datas, int timeout_ms){
     UART_DataType *uart_data = pDev->priv_data;
+    uint8_t len = strlen((char*)datas);
     HAL_UART_Transmit_IT(uart_data->handle, datas, len);
     if (pdTRUE == xSemaphoreTake(uart_data->xTxSem, timeout_ms))
         return 0;

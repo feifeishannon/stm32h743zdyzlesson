@@ -473,17 +473,17 @@ void StartTask01(void *argument)
 void Uart1Sender(void *argument)
 {
   /* USER CODE BEGIN Uart1Sender */
-  uint8_t c;
+  uint8_t cstring[2]={0};
   UART_DeviceType *UARTdevice = Get_UART_Device("stm32_uart1");
   UARTdevice->Init(UARTdevice);
   /* Infinite loop */
   for(;;)
   {
-    UARTdevice->Send(UARTdevice, "请输入数据============>\r\n", 30, 100);
-    while (0 != UARTdevice->Recv(UARTdevice, &c, 100));
-    UARTdevice->Send(UARTdevice, "接收到：", 14, 10);
-    UARTdevice->Send(UARTdevice,  &c, 1, 10);
-    UARTdevice->Send(UARTdevice,  "\r\n", 3, 10);
+    UARTdevice->Send(UARTdevice, "请输入数据============>\r\n", 100);
+    while (0 != UARTdevice->Recv(UARTdevice, &cstring[0], 100));
+    UARTdevice->Send(UARTdevice, "接收到：", 10);
+    UARTdevice->Send(UARTdevice,  cstring, 10);
+    UARTdevice->Send(UARTdevice,  "\r\n", 10);
     
   }
   /* USER CODE END Uart1Sender */
