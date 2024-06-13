@@ -6,6 +6,7 @@
         "cmsis_os2.h": "c",
         "cmsis_os.h": "c",
         "queue.h": "c",
-        "stm32h7xx_hal.h": "c"
+        "stm32h7xx_hal.h": "c",
+        "lwip.h": "c"
     }
 }

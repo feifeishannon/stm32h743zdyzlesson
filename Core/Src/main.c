@@ -26,6 +26,8 @@
 #include "string.h"
 #include <stdio.h>
 #include "uart_device.h"
+#include "sockets.h"
+#include "pcf8574.h"
 
 /* USER CODE END Includes */
 
@@ -78,6 +80,13 @@ const osThreadAttr_t vUartReceiverTa_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for enternetTask */
+osThreadId_t enternetTaskHandle;
+const osThreadAttr_t enternetTask_attributes = {
+  .name = "enternetTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE BEGIN PV */
 osThreadId_t myTaskHandle;
 const osThreadAttr_t myTask_attributes = {
@@ -85,6 +94,9 @@ const osThreadAttr_t myTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+
+volatile pcf8574Regs pcf8574_Reg_map;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,8 +109,10 @@ void StartDefaultTask(void *argument);
 void StartTask01(void *argument);
 void Uart1Sender(void *argument);
 void Uart1Receiver(void *argument);
+void enternetStart(void *argument);
 
 /* USER CODE BEGIN PFP */
+#define Write_Through() (*(__IO uint32_t*)0XE000EF9C=1UL<<2) //Cache͸дģʽ
 
 struct __FILE 
 {
@@ -150,7 +164,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  Write_Through();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -199,6 +213,9 @@ int main(void)
 
   /* creation of vUartReceiverTa */
   vUartReceiverTaHandle = osThreadNew(Uart1Receiver, NULL, &vUartReceiverTa_attributes);
+
+  /* creation of enternetTask */
+  enternetTaskHandle = osThreadNew(enternetStart, NULL, &enternetTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -332,7 +349,13 @@ static void MX_I2C2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN I2C2_Init 2 */
-
+    pcf8574_Reg_map.Output.all = 0xff;
+    pcf8574_Reg_map.Output.bit.ETH_RESET_IO = 1;
+    pcf8574WriteOutput((pcf8574Regs*) &pcf8574_Reg_map);
+    HAL_Delay(100);
+    pcf8574_Reg_map.Output.bit.ETH_RESET_IO = 0;
+    pcf8574WriteOutput((pcf8574Regs*) &pcf8574_Reg_map);
+    HAL_Delay(100);
   /* USER CODE END I2C2_Init 2 */
 
 }
@@ -511,6 +534,50 @@ void Uart1Receiver(void *argument)
     osDelay(1);
   }
   /* USER CODE END Uart1Receiver */
+}
+
+#define DEST_PORT 10000;
+/* USER CODE BEGIN Header_enternetStart */
+/**
+* @brief Function implementing the enternetTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_enternetStart */
+void enternetStart(void *argument)
+{
+  /* USER CODE BEGIN enternetStart */
+  int sock = -1;
+  struct sockaddr_in client_addr;
+  while (1)
+  {
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0){
+      printf("Socket Error\n");
+      vTaskDelay(10);
+      continue;
+    }
+
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(DEST_PORT);
+    client_addr.sin_addr.s_addr = ipaddr.addr;
+    memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
+    
+    if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct client_addr))==-1){
+
+    }
+  }
+  
+  
+  /* Infinite loop */
+  for(;;)
+  {
+    MX_LWIP_Process();
+
+    osDelay(1);
+  }
+  /* USER CODE END enternetStart */
 }
 
 /* MPU Configuration */
