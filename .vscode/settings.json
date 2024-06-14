@@ -7,6 +7,15 @@
         "cmsis_os.h": "c",
         "queue.h": "c",
         "stm32h7xx_hal.h": "c",
-        "lwip.h": "c"
+        "lwip.h": "c",
+        "initializer_list": "c",
+        "type_traits": "c",
+        "xutility": "c",
+        "string.h": "c",
+        "compare": "c",
+        "tuple": "c",
+        "utility": "c",
+        "xmemory": "c",
+        "xtr1common": "c"
     }
 }
