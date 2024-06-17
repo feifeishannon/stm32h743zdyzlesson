@@ -59,33 +59,12 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for myTask01 */
-osThreadId_t myTask01Handle;
-const osThreadAttr_t myTask01_attributes = {
-  .name = "myTask01",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for vUartSenderTask */
-osThreadId_t vUartSenderTaskHandle;
-const osThreadAttr_t vUartSenderTask_attributes = {
-  .name = "vUartSenderTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for vUartReceiverTa */
-osThreadId_t vUartReceiverTaHandle;
-const osThreadAttr_t vUartReceiverTa_attributes = {
-  .name = "vUartReceiverTa",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
 /* Definitions for enternetTask */
 osThreadId_t enternetTaskHandle;
 const osThreadAttr_t enternetTask_attributes = {
   .name = "enternetTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
 osThreadId_t myTaskHandle;
@@ -107,9 +86,6 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_I2C2_Init(void);
 void StartDefaultTask(void *argument);
-void StartTask01(void *argument);
-void Uart1Sender(void *argument);
-void Uart1Receiver(void *argument);
 void enternetStart(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -207,15 +183,6 @@ int main(void)
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
-  /* creation of myTask01 */
-  // myTask01Handle = osThreadNew(StartTask01, NULL, &myTask01_attributes);
-
-  /* creation of vUartSenderTask */
-  // vUartSenderTaskHandle = osThreadNew(Uart1Sender, NULL, &vUartSenderTask_attributes);
-
-  /* creation of vUartReceiverTa */
-  // vUartReceiverTaHandle = osThreadNew(Uart1Receiver, NULL, &vUartReceiverTa_attributes);
 
   /* creation of enternetTask */
   enternetTaskHandle = osThreadNew(enternetStart, NULL, &enternetTask_attributes);
@@ -471,75 +438,6 @@ void StartDefaultTask(void *argument)
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_StartTask01 */
-/**
-* @brief Function implementing the myTask01 thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask01 */
-void StartTask01(void *argument)
-{
-  /* USER CODE BEGIN StartTask01 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask01 */
-}
-
-/* USER CODE BEGIN Header_Uart1Sender */
-/**
-* @brief Function implementing the vUartSenderTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Uart1Sender */
-void Uart1Sender(void *argument)
-{
-  /* USER CODE BEGIN Uart1Sender */
-  uint8_t cstring[2]={0};
-  
-  /* Infinite loop */
-  for(;;)
-  {
-    // UARTdevice->Send(UARTdevice, "请输入数据============>\r\n", 100);
-    // while (0 != UARTdevice->Recv(UARTdevice, &cstring[0], 100));
-    // UARTdevice->Send(UARTdevice, "接收到：", 10);
-    // UARTdevice->Send(UARTdevice,  cstring, 10);
-    // UARTdevice->Send(UARTdevice,  "\r\n", 10);
-    osDelay(1);
-  }
-  /* USER CODE END Uart1Sender */
-}
-
-/* USER CODE BEGIN Header_Uart1Receiver */
-/**
-* @brief Function implementing the vUartReceiverTa thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Uart1Receiver */
-void Uart1Receiver(void *argument)
-{
-  /* USER CODE BEGIN Uart1Receiver */
-  uint8_t ch;
-  /* Infinite loop */
-  for(;;)
-  {
-    HAL_UART_Receive_IT(&huart1,(uint8_t *)&ch,1);
-    while (HAL_OK != HAL_UART_Receive(&huart1, &ch, 1, 100)){
-			osDelay(10);
-		}
-    
-    printf("Received data %c\r\n",ch);
-    
-    
-  }
-  /* USER CODE END Uart1Receiver */
-}
-
 /* USER CODE BEGIN Header_enternetStart */
 /**
 * @brief Function implementing the enternetTask thread.
@@ -556,20 +454,26 @@ void enternetStart(void *argument)
 
   IP4_ADDR(&ipaddr, DEST_ADDRESS[0],DEST_ADDRESS[1],DEST_ADDRESS[2],DEST_ADDRESS[3]);
   char sendbuf[]="test";
-  UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
+  printf( "enternetStart\r\n");
+  // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
 
   while (1)
   {
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
+    static uint8_t i = 0;
+    static uint8_t j = 0;
+    static uint8_t m = 0;
     if(sock < 0){
-      UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
-
+      // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
+      
       // printf("Socket Error\r\n");
       vTaskDelay(100);
+      i++;
+      printf("Socket err %d times\r\n",i);
       continue;
     }
-  
+
     #define DEST_PORT 5555
 
     client_addr.sin_family = AF_INET;
@@ -580,20 +484,27 @@ void enternetStart(void *argument)
     if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
       // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
       // printf("Failed to connect\r\n");
+
+      vTaskDelay(100);
       closesocket(sock);
       vTaskDelay(100);
+      j++;
+      printf("connect err %d times\r\n",j);
       continue;
     }
-      UARTdevice->Send(UARTdevice, "Connecting\r\n", 100);
 
     // printf("Connecting\r\n");
     while (1){
-      if(write(sock,sendbuf,sizeof(sendbuf))<0)
+      if(write(sock,sendbuf,sizeof(sendbuf))<0){
+        m++;
+        vTaskDelay(100);
+        printf("write err %d times\r\n",m);
         break;
-
-      vTaskDelay(1000);
+      }
+      m=0;
+      vTaskDelay(100);
     }
-		printf("closesocket\r\n");
+    printf("closesocket\r\n");
     closesocket(sock);
     
   }
@@ -636,11 +547,22 @@ void MPU_Config(void)
   /** Initializes and configures the Region and the memory to be protected
   */
   MPU_InitStruct.Number = MPU_REGION_NUMBER1;
-  MPU_InitStruct.BaseAddress = 0x30000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_256B;
+  MPU_InitStruct.BaseAddress = 0x30020000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_128KB;
   MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /** Initializes and configures the Region and the memory to be protected
+  */
+  MPU_InitStruct.Number = MPU_REGION_NUMBER2;
+  MPU_InitStruct.BaseAddress = 0x30040000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512B;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
