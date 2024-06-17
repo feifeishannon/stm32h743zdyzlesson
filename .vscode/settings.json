@@ -16,6 +16,7 @@
         "tuple": "c",
         "utility": "c",
         "xmemory": "c",
-        "xtr1common": "c"
+        "xtr1common": "c",
+        "uart_device.h": "c"
     }
 }

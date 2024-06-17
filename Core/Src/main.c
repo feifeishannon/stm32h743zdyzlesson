@@ -28,12 +28,14 @@
 #include "uart_device.h"
 #include "sockets.h"
 #include "pcf8574.h"
-
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "queue.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+SemaphoreHandle_t xLWIP_Init;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -170,6 +172,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+  xLWIP_Init = xSemaphoreCreateBinary();
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -178,6 +181,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -427,8 +431,11 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
+  
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+  xSemaphoreGiveFromISR(xLWIP_Init, NULL);
+
   /* Infinite loop */
   for(;;)
   {
@@ -451,7 +458,8 @@ void enternetStart(void *argument)
   int sock = -1;
   struct sockaddr_in client_addr;
   uint8_t DEST_ADDRESS[4]={192,168,1,99};
-
+  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));
+  
   IP4_ADDR(&ipaddr, DEST_ADDRESS[0],DEST_ADDRESS[1],DEST_ADDRESS[2],DEST_ADDRESS[3]);
   char sendbuf[]="test";
   printf( "enternetStart\r\n");
