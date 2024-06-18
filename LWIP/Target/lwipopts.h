@@ -109,6 +109,8 @@
 #define CHECKSUM_CHECK_TCP 0
 /*----- Value in opt.h for CHECKSUM_CHECK_ICMP6: 1 -----*/
 #define CHECKSUM_CHECK_ICMP6 0
+/*----- Default Value for LWIP_DBG_MIN_LEVEL: LWIP_DBG_LEVEL_ALL ---*/
+#define LWIP_DBG_MIN_LEVEL LWIP_DBG_LEVEL_WARNING
 /*----- Default Value for ETHARP_DEBUG: LWIP_DBG_OFF ---*/
 #define ETHARP_DEBUG LWIP_DBG_ON
 /*----- Default Value for NETIF_DEBUG: LWIP_DBG_OFF ---*/
@@ -171,7 +173,7 @@
 #define DNS_DEBUG LWIP_DBG_ON
 /*-----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
-
+#define LWIP_DEBUG 0
 /* USER CODE END 1 */
 
 #ifdef __cplusplus

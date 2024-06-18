@@ -431,7 +431,6 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
-  
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
   xSemaphoreGiveFromISR(xLWIP_Init, NULL);
@@ -458,7 +457,7 @@ void enternetStart(void *argument)
   int sock = -1;
   struct sockaddr_in client_addr;
   uint8_t DEST_ADDRESS[4]={192,168,1,99};
-  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));
+  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务
   
   IP4_ADDR(&ipaddr, DEST_ADDRESS[0],DEST_ADDRESS[1],DEST_ADDRESS[2],DEST_ADDRESS[3]);
   char sendbuf[]="test";
