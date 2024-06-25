@@ -455,6 +455,8 @@ void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
   int sock = -1;
+  ip4_addr_t ipaddr;
+
   struct sockaddr_in client_addr;
   uint8_t DEST_ADDRESS[4]={192,168,1,99};
   while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务
