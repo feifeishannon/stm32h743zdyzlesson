@@ -58,14 +58,14 @@ UART_HandleTypeDef huart1;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 512 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for enternetTask */
 osThreadId_t enternetTaskHandle;
 const osThreadAttr_t enternetTask_attributes = {
   .name = "enternetTask",
-  .stack_size = 512 * 4,
+  .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
@@ -557,7 +557,7 @@ void MPU_Config(void)
   */
   MPU_InitStruct.Number = MPU_REGION_NUMBER1;
   MPU_InitStruct.BaseAddress = 0x30000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_2KB;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_1KB;
   MPU_InitStruct.SubRegionDisable = 0x0;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
