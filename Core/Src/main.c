@@ -31,6 +31,7 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "queue.h"
+#include "lwip/apps/lwiperf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,7 +59,7 @@ UART_HandleTypeDef huart1;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 256 * 4,
+  .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for enternetTask */
@@ -350,7 +351,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 1000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -454,69 +455,77 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-  int sock = -1;
+  // int sock = -1;
+  // struct sockaddr_in client_addr;
   ip4_addr_t ipaddr;
 
-  struct sockaddr_in client_addr;
-  uint8_t DEST_ADDRESS[4]={192,168,1,99};
   while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务
   
-  IP4_ADDR(&ipaddr, DEST_ADDRESS[0],DEST_ADDRESS[1],DEST_ADDRESS[2],DEST_ADDRESS[3]);
-  char sendbuf[]="test";
+  IP4_ADDR(&ipaddr, 192,168,1,10);
+  // char sendbuf[]="test";
   printf( "enternetStart\r\n");
   // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
+  
 
-  while (1)
-  {
+  LOCK_TCPIP_CORE();
+  // lwiperf_start_tcp_server_default(NULL, NULL);
+  lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
+  // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
+  // lwiperf_start_tcp_client_default(&remote_addr, NULL, NULL);
+  UNLOCK_TCPIP_CORE();
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    static uint8_t i = 0;
-    static uint8_t j = 0;
-    static uint8_t m = 0;
-    if(sock < 0){
-      // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
+  // while (1)
+  // {
+
+  //   sock = socket(AF_INET, SOCK_STREAM, 0);
+  //   static uint8_t i = 0;
+  //   static uint8_t j = 0;
+  //   static uint8_t m = 0;
+  //   if(sock < 0){
+  //     // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
       
-      // printf("Socket Error\r\n");
-      vTaskDelay(100);
-      i++;
-      // printf("Socket err %d times\r\n",i);
-      continue;
-    }
+  //     // printf("Socket Error\r\n");
+  //     vTaskDelay(100);
+  //     i++;
+  //     // printf("Socket err %d times\r\n",i);
+  //     continue;
+  //   }
 
-    #define DEST_PORT 5555
+  //   #define DEST_PORT 5555
 
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(DEST_PORT);
-    client_addr.sin_addr.s_addr = ipaddr.addr;
-    memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
+  //   client_addr.sin_family = AF_INET;
+  //   client_addr.sin_port = htons(DEST_PORT);
+  //   client_addr.sin_addr.s_addr = ipaddr.addr;
+  //   memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
     
-    if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
-      // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
-      // printf("Failed to connect\r\n");
+  //   if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
+  //     // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
+  //     // printf("Failed to connect\r\n");
 
-      vTaskDelay(100);
-      closesocket(sock);
-      vTaskDelay(100);
-      j++;
-      // printf("connect err %d times\r\n",j);
-      continue;
-    }
+  //     vTaskDelay(100);
+  //     closesocket(sock);
+  //     vTaskDelay(100);
+  //     j++;
+  //     // printf("connect err %d times\r\n",j);
+  //     continue;
+  //   }
 
-    // printf("Connecting\r\n");
-    while (1){
-      if(write(sock,sendbuf,sizeof(sendbuf))<0){
-        m++;
-        vTaskDelay(100);
-        // printf("write err %d times\r\n",m);
-        break;
-      }
-      m=0;
-      vTaskDelay(100);
-    }
-    printf("closesocket\r\n");
-    closesocket(sock);
+  //   // printf("Connecting\r\n");
+  //   while (1){
+
+  //     if(write(sock,sendbuf,sizeof(sendbuf))<0){
+  //       m++;
+  //       vTaskDelay(1000);
+  //       // printf("write err %d times\r\n",m);
+  //       break;
+  //     }
+  //     m=0;
+  //     vTaskDelay(1000);
+  //   }
+  //   printf("closesocket\r\n");
+  //   closesocket(sock);
     
-  }
+  // }
   
   
   /* Infinite loop */

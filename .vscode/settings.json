@@ -18,6 +18,7 @@
         "xmemory": "c",
         "xtr1common": "c",
         "uart_device.h": "c",
-        "pcf8574.h": "c"
+        "pcf8574.h": "c",
+        "lwiperf.h": "c"
     }
 }
