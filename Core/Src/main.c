@@ -469,9 +469,9 @@ void enternetStart(void *argument)
 
   LOCK_TCPIP_CORE();
   // lwiperf_start_tcp_server_default(NULL, NULL);
-  lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
+  // lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
   // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
-  // lwiperf_start_tcp_client_default(&remote_addr, NULL, NULL);
+  lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL);
   UNLOCK_TCPIP_CORE();
 
   // while (1)
