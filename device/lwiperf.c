@@ -398,6 +398,7 @@ lwiperf_tx_start_impl(const ip_addr_t *remote_ip, u16_t remote_port, lwiperf_set
   *new_conn = NULL;
 
   client_conn = (lwiperf_state_tcp_t *)LWIPERF_ALLOC(lwiperf_state_tcp_t);
+
   if (client_conn == NULL) {
     return ERR_MEM;
   }

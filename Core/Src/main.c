@@ -458,21 +458,25 @@ void enternetStart(void *argument)
   // int sock = -1;
   // struct sockaddr_in client_addr;
   ip4_addr_t ipaddr;
-
-  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务
+  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务 目测无效
+  HAL_Delay(100);
   
-  IP4_ADDR(&ipaddr, 192,168,1,10);
+  IP4_ADDR(&ipaddr, 192,168,1,99);
   // char sendbuf[]="test";
   printf( "enternetStart\r\n");
   // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
   
 
-  LOCK_TCPIP_CORE();
+  // LOCK_TCPIP_CORE();
   // lwiperf_start_tcp_server_default(NULL, NULL);
   // lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
   // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
-  lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL);
-  UNLOCK_TCPIP_CORE();
+  while(!lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL)){
+    printf("lwiperf_start_tcp_client_default_fail\r\n");
+    vTaskDelay(100);
+
+  }
+  // UNLOCK_TCPIP_CORE();
 
   // while (1)
   // {
