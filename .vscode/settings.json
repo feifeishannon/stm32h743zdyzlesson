@@ -19,6 +19,10 @@
         "xtr1common": "c",
         "uart_device.h": "c",
         "pcf8574.h": "c",
-        "lwiperf.h": "c"
+        "lwiperf.h": "c",
+        "socket_device.h": "c",
+        "ethernet.h": "c",
+        "timeouts.h": "c",
+        "ethernetif.h": "c"
     }
 }

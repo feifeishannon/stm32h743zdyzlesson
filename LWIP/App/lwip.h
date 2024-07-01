@@ -41,6 +41,7 @@
 #endif /* WITH_RTOS */
 
 /* USER CODE BEGIN 0 */
+extern osSemaphoreId_t xNetifSemaphore;
 
 /* USER CODE END 0 */
 

@@ -14,6 +14,9 @@ typedef struct Socekt_Device
     void *priv_data;
 }Socekt_DeviceType;
 
+extern const u8_t lwiperf_txbuf_const[1600];
+
+
 Socekt_DeviceType *Get_Socekt_Device(char *name);
 
 

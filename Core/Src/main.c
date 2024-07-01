@@ -26,6 +26,7 @@
 #include "string.h"
 #include <stdio.h>
 #include "uart_device.h"
+#include "socket_device.h"
 #include "sockets.h"
 #include "pcf8574.h"
 #include "FreeRTOS.h"
@@ -236,11 +237,6 @@ void SystemClock_Config(void)
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
-
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -250,7 +246,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 60;
+  RCC_OscInitStruct.PLL.PLLN = 50;
   RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
@@ -275,7 +271,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -297,7 +293,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x307075B1;
+  hi2c2.Init.Timing = 0x10C0ECFF;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -455,9 +451,10 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-  // int sock = -1;
-  // struct sockaddr_in client_addr;
+  int sock = -1;
+  struct sockaddr_in client_addr;
   ip4_addr_t ipaddr;
+  // uint16_t times=0;
   while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务 目测无效
   HAL_Delay(100);
   
@@ -466,70 +463,69 @@ void enternetStart(void *argument)
   printf( "enternetStart\r\n");
   // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
   
-
   // LOCK_TCPIP_CORE();
   // lwiperf_start_tcp_server_default(NULL, NULL);
   // lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
   // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
-  while(!lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL)){
-    printf("lwiperf_start_tcp_client_default_fail\r\n");
-    vTaskDelay(100);
+  // while(!lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL)){
+  //   printf("lwiperf_start_tcp_client_default_fail_%d\r\n",++times);
+  //   vTaskDelay(100);
 
-  }
+  // }
   // UNLOCK_TCPIP_CORE();
 
-  // while (1)
-  // {
+  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) == osOK)
+  {
 
-  //   sock = socket(AF_INET, SOCK_STREAM, 0);
-  //   static uint8_t i = 0;
-  //   static uint8_t j = 0;
-  //   static uint8_t m = 0;
-  //   if(sock < 0){
-  //     // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    static uint8_t i = 0;
+    static uint8_t j = 0;
+    static uint8_t m = 0;
+    if(sock < 0){
+      // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
       
-  //     // printf("Socket Error\r\n");
-  //     vTaskDelay(100);
-  //     i++;
-  //     // printf("Socket err %d times\r\n",i);
-  //     continue;
-  //   }
+      // printf("Socket Error\r\n");
+      vTaskDelay(100);
+      i++;
+      // printf("Socket err %d times\r\n",i);
+      continue;
+    }
 
-  //   #define DEST_PORT 5555
+    #define DEST_PORT 5001
 
-  //   client_addr.sin_family = AF_INET;
-  //   client_addr.sin_port = htons(DEST_PORT);
-  //   client_addr.sin_addr.s_addr = ipaddr.addr;
-  //   memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(DEST_PORT);
+    client_addr.sin_addr.s_addr = ipaddr.addr;
+    memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
     
-  //   if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
-  //     // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
-  //     // printf("Failed to connect\r\n");
+    if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
+      // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
+      // printf("Failed to connect\r\n");
 
-  //     vTaskDelay(100);
-  //     closesocket(sock);
-  //     vTaskDelay(100);
-  //     j++;
-  //     // printf("connect err %d times\r\n",j);
-  //     continue;
-  //   }
+      vTaskDelay(100);
+      closesocket(sock);
+      vTaskDelay(100);
+      j++;
+      printf("connect err %d times\r\n",j);
+      continue;
+    }
 
-  //   // printf("Connecting\r\n");
-  //   while (1){
+    // printf("Connecting\r\n");
+    while (1){
 
-  //     if(write(sock,sendbuf,sizeof(sendbuf))<0){
-  //       m++;
-  //       vTaskDelay(1000);
-  //       // printf("write err %d times\r\n",m);
-  //       break;
-  //     }
-  //     m=0;
-  //     vTaskDelay(1000);
-  //   }
-  //   printf("closesocket\r\n");
-  //   closesocket(sock);
+      if(write(sock,lwiperf_txbuf_const,sizeof(lwiperf_txbuf_const))<0){
+        m++;
+        vTaskDelay(1000);
+        // printf("write err %d times\r\n",m);
+        break;
+      }
+      m=0;
+      vTaskDelay(1000);
+    }
+    printf("closesocket\r\n");
+    closesocket(sock);
     
-  // }
+  }
   
   
   /* Infinite loop */

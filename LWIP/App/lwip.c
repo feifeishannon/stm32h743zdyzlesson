@@ -54,7 +54,10 @@ osThreadAttr_t attributes;
 /* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN 2 */
-
+osSemaphoreId_t  xNetifSemaphore;
+const osSemaphoreAttr_t semaphore_attributes = {
+  .name = "xNetifSemaphore"
+};
 /* USER CODE END 2 */
 
 /**
@@ -109,7 +112,11 @@ void MX_LWIP_Init(void)
 /* USER CODE END H7_OS_THREAD_NEW_CMSIS_RTOS_V2 */
 
 /* USER CODE BEGIN 3 */
-
+  xNetifSemaphore = osSemaphoreNew(1, 0, &semaphore_attributes);
+    if (xNetifSemaphore == NULL)
+    {
+        // Handle error
+    }
 /* USER CODE END 3 */
 }
 
@@ -130,11 +137,17 @@ static void ethernet_link_status_updated(struct netif *netif)
   if (netif_is_up(netif))
   {
 /* USER CODE BEGIN 5 */
+    printf("Network up\r\n");
+    osSemaphoreRelease(xNetifSemaphore);
 /* USER CODE END 5 */
   }
   else /* netif is down */
   {
 /* USER CODE BEGIN 6 */
+    printf("Network down\r\n");
+    if(osSemaphoreAcquire(xNetifSemaphore, osWaitForever) == osOK)
+      osSemaphoreRelease (xNetifSemaphore);
+
 /* USER CODE END 6 */
   }
 }
