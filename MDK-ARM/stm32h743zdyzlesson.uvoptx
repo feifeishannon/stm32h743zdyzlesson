@@ -119,6 +119,11 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
+          <Key>DLGUARM</Key>
+          <Name>d</Name>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
           <Key>ARMRTXEVENTFLAGS</Key>
           <Name>-L70 -Z18 -C0 -M0 -T1</Name>
         </SetRegEntry>
@@ -131,10 +136,6 @@
           <Number>0</Number>
           <Key>ARMDBGFLAGS</Key>
           <Name></Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
-          <Key>DLGUARM</Key>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -167,14 +168,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>../Middlewares/Third_Party/LwIP/src/api/sockets.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\stm32h743zdyzlesson\../Middlewares/Third_Party/LwIP/src/api/sockets.c\843</Expression>
+          <Expression>\\\../Middlewares/Third_Party/LwIP/src/api/sockets.c\843</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
           <LineNumber>35</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134297062</Address>
+          <Address>134297058</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -187,6 +188,22 @@
         </Bp>
         <Bp>
           <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>395</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134277456</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>../Middlewares/Third_Party/LwIP/src/api/api_lib.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\stm32h743zdyzlesson\../Middlewares/Third_Party/LwIP/src/api/api_lib.c\395</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
           <Type>0</Type>
           <LineNumber>444</LineNumber>
           <EnabledFlag>1</EnabledFlag>

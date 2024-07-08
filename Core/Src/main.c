@@ -468,8 +468,7 @@ void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
 
-  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK)
-  {};
+  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // Æô¶¯TCP·þÎñÆ÷
     // start_tcp_server();
 
