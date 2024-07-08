@@ -33,11 +33,13 @@
 #include "semphr.h"
 #include "queue.h"
 #include "lwip/apps/lwiperf.h"
+#include "tcp_client_item.h"
+#include "tcp_server_item.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-SemaphoreHandle_t xLWIP_Init;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -174,7 +176,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
-  xLWIP_Init = xSemaphoreCreateBinary();
+
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -430,13 +432,27 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
-  xSemaphoreGiveFromISR(xLWIP_Init, NULL);
-
+  static uint16_t ledtimes=0;
+  uint16_t ledblinkcycle=500;
+  uint16_t ledontime=10;
+  uint16_t ledofftime=ledblinkcycle-ledontime;
+  // uint8_t led
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-    osDelay(500);
+    if(ledtimes++ == ledofftime)
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+    else if (ledtimes == ledontime)
+    {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    } else if (ledtimes == ledblinkcycle)
+    { 
+      ledtimes = 0U;
+    }
+    
+
+    
+    osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -451,83 +467,14 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-  int sock = -1;
-  struct sockaddr_in client_addr;
-  ip4_addr_t ipaddr;
-  // uint16_t times=0;
-  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务 目测无效
-  HAL_Delay(100);
-  
-  IP4_ADDR(&ipaddr, 192,168,1,99);
-  // char sendbuf[]="test";
-  printf( "enternetStart\r\n");
-  // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
-  
-  // LOCK_TCPIP_CORE();
-  // lwiperf_start_tcp_server_default(NULL, NULL);
-  // lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
-  // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
-  // while(!lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL)){
-  //   printf("lwiperf_start_tcp_client_default_fail_%d\r\n",++times);
-  //   vTaskDelay(100);
 
-  // }
-  // UNLOCK_TCPIP_CORE();
+  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK)
+  {};
+    // 启动TCP服务器
+    // start_tcp_server();
 
-  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) == osOK)
-  {
-
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    static uint8_t i = 0;
-    static uint8_t j = 0;
-    static uint8_t m = 0;
-    if(sock < 0){
-      // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
-      
-      // printf("Socket Error\r\n");
-      vTaskDelay(100);
-      i++;
-      // printf("Socket err %d times\r\n",i);
-      continue;
-    }
-
-    #define DEST_PORT 5001
-
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(DEST_PORT);
-    client_addr.sin_addr.s_addr = ipaddr.addr;
-    memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
-    
-    if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
-      // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
-      // printf("Failed to connect\r\n");
-
-      vTaskDelay(100);
-      closesocket(sock);
-      vTaskDelay(100);
-      j++;
-      printf("connect err %d times\r\n",j);
-      continue;
-    }
-
-    // printf("Connecting\r\n");
-    while (1){
-
-      if(write(sock,lwiperf_txbuf_const,sizeof(lwiperf_txbuf_const))<0){
-        m++;
-        vTaskDelay(1000);
-        // printf("write err %d times\r\n",m);
-        break;
-      }
-      m=0;
-      vTaskDelay(1000);
-    }
-    printf("closesocket\r\n");
-    closesocket(sock);
-    
-  }
-  
-  
+    // 启动TCP客户端
+    start_tcp_client();
   /* Infinite loop */
   for(;;)
   {

@@ -23,6 +23,8 @@
         "socket_device.h": "c",
         "ethernet.h": "c",
         "timeouts.h": "c",
-        "ethernetif.h": "c"
+        "ethernetif.h": "c",
+        "netdb.h": "c",
+        "tcp_server_item.h": "c"
     }
 }
