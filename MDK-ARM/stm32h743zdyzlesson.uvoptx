@@ -157,53 +157,37 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>843</LineNumber>
+          <LineNumber>60</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134265016</Address>
+          <Address>134319358</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>../Middlewares/Third_Party/LwIP/src/api/sockets.c</Filename>
+          <Filename>..\device\tcp_server_item.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\\../Middlewares/Third_Party/LwIP/src/api/sockets.c\843</Expression>
+          <Expression>\\stm32h743zdyzlesson\../device/tcp_server_item.c\60</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>35</LineNumber>
+          <LineNumber>43</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134297058</Address>
+          <Address>134319264</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\device\tcp_client_item.c</Filename>
+          <Filename>..\device\tcp_server_item.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\stm32h743zdyzlesson\../device/tcp_client_item.c\35</Expression>
+          <Expression>\\stm32h743zdyzlesson\../device/tcp_server_item.c\43</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>395</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134277456</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>../Middlewares/Third_Party/LwIP/src/api/api_lib.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\stm32h743zdyzlesson\../Middlewares/Third_Party/LwIP/src/api/api_lib.c\395</Expression>
-        </Bp>
-        <Bp>
-          <Number>3</Number>
           <Type>0</Type>
           <LineNumber>444</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -215,6 +199,38 @@
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
           <Filename>startup_stm32h743xx.s</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>395</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>../Middlewares/Third_Party/LwIP/src/api/api_lib.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>843</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>../Middlewares/Third_Party/LwIP/src/api/sockets.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>

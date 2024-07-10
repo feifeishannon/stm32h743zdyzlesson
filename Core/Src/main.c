@@ -470,10 +470,10 @@ void enternetStart(void *argument)
 
   while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // 启动TCP服务器
-    // start_tcp_server();
+    start_tcp_server();
 
     // 启动TCP客户端
-    start_tcp_client();
+    // start_tcp_client();
   /* Infinite loop */
   for(;;)
   {
