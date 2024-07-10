@@ -473,7 +473,7 @@ void enternetStart(void *argument)
     start_tcp_server();
 
     // Æô¶¯TCP¿Í»§¶Ë
-    // start_tcp_client();
+    start_tcp_client();
   /* Infinite loop */
   for(;;)
   {
