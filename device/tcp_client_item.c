@@ -46,6 +46,66 @@ void recvTask(void *pvParameters);
 int tcpClientInit(void);
 
 
+void handle_lwip_error(err_t err) {
+    switch (err) {
+        case ERR_OK:
+            printf("No error, everything OK.\n");
+            break;
+        case ERR_MEM:
+            printf("Out of memory error.\n");
+            break;
+        case ERR_BUF:
+            printf("Buffer error.\n");
+            break;
+        case ERR_TIMEOUT:
+            printf("Timeout.\n");
+            break;
+        case ERR_RTE:
+            printf("Routing problem.\n");
+            break;
+        case ERR_INPROGRESS:
+            printf("Operation in progress.\n");
+            break;
+        case ERR_VAL:
+            printf("Illegal value.\n");
+            break;
+        case ERR_WOULDBLOCK:
+            printf("Operation would block.\n");
+            break;
+        case ERR_USE:
+            printf("Address in use.\n");
+            break;
+        case ERR_ALREADY:
+            printf("Already connecting.\n");
+            break;
+        case ERR_ISCONN:
+            printf("Conn already established.\n");
+            break;
+        case ERR_CONN:
+            printf("Not connected.\n");
+            break;
+        case ERR_IF:
+            printf("Low-level netif error.\n");
+            break;
+        case ERR_ABRT:
+            printf("Connection aborted.\n");
+            break;
+        case ERR_RST:
+            printf("Connection reset.\n");
+            break;
+        case ERR_CLSD:
+            printf("Connection closed.\n");
+            break;
+        case ERR_ARG:
+            printf("Illegal argument.\n");
+            break;
+        default:
+            printf("Unknown error: %d\n", err);
+            break;
+    }
+}
+
+
 int tcpClientInit(){
     
     // Create socket
@@ -66,7 +126,8 @@ int tcpClientInit(){
     // Connect to server
     int err = connect(client.sockfd, (struct sockaddr *)&client.server_addr, sizeof(client.server_addr));
     if (err != 0) {
-        printf("Socket unable to connect: errno %d\n", errno);
+        handle_lwip_error(err);
+        // printf("Socket unable to connect: errno %d\n", errno);
         close(client.sockfd);
         vTaskDelete(NULL);
         return -1;
@@ -89,6 +150,7 @@ void sendTask(void *pvParameters) {
     char sendBuf[SEND_BUF_SIZE];
     int err = 0;
     while (1) {
+        static uint8_t errtimes = 0;
         // Fill send buffer with data
         snprintf(sendBuf, SEND_BUF_SIZE, "Hello, Server!");
         
@@ -97,12 +159,19 @@ void sendTask(void *pvParameters) {
             err = send(client.sockfd, sendBuf, strlen(sendBuf), 0);
             xSemaphoreGive(xSocketMutex);
         }
-        if (err != 0) {
-            printf("Socket send length: %d\n", err);
+        if (err == -1) {
+            handle_lwip_error(err);
+            // printf("Socket send length: %d\n", err);
+            if(errtimes++>=10){
+                errtimes = 0;
+                close(client.sockfd);
+                break;
+            }
         }
         // Delay before next send
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+    vTaskDelete(NULL);
 }
 
 // Task for receiving data
