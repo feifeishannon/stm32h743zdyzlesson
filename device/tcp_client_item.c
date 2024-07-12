@@ -126,7 +126,7 @@ int tcpClientInit(){
     // Connect to server
     int err = connect(client.sockfd, (struct sockaddr *)&client.server_addr, sizeof(client.server_addr));
     if (err != 0) {
-        handle_lwip_error(err);
+        handle_lwip_error(errno);
         // printf("Socket unable to connect: errno %d\n", errno);
         close(client.sockfd);
         vTaskDelete(NULL);
@@ -160,7 +160,7 @@ void sendTask(void *pvParameters) {
             xSemaphoreGive(xSocketMutex);
         }
         if (err == -1) {
-            handle_lwip_error(err);
+            handle_lwip_error(errno);
             // printf("Socket send length: %d\n", err);
             if(errtimes++>=10){
                 errtimes = 0;
