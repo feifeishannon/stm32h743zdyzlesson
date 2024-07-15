@@ -35,6 +35,9 @@
 #include "lwip/apps/lwiperf.h"
 #include "tcp_client_item.h"
 #include "tcp_server_item.h"
+#include "udp_client_item.h"
+#include "udp_server_item.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -474,6 +477,12 @@ void enternetStart(void *argument)
 
     // 启动TCP客户端
     start_tcp_client();
+
+    // 启动TCP服务器
+    start_udp_server();
+
+    // 启动TCP客户端
+    start_udp_client();
   /* Infinite loop */
   for(;;)
   {

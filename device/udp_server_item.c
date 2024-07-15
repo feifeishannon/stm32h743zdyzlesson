@@ -1,4 +1,4 @@
-#include "lwip/tcp.h"
+#include "lwip/udp.h"
 #include "lwip/sys.h"
 #include "string.h"
 #include <stdio.h>
@@ -9,13 +9,13 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "queue.h"
-#include "tcp_server_item.h"
+#include "udp_server_item.h"
 
 typedef struct {
     int sockfd;
     struct sockaddr_in server_addr;
     QueueHandle_t client_queue;
-} TcpServer;
+} udpServer;
 
 typedef struct {
     int client_sock;
@@ -27,8 +27,8 @@ static void send_message_to_client(ClientInfo *client, const char *message) {
     }
 }
 
-void tcp_server_task(void *pvParameters) {
-    TcpServer server;
+void udp_server_task(void *pvParameters) {
+    udpServer server;
     char rx_buffer[128];
     char addr_str[128];
     int addr_family = AF_INET;
@@ -36,9 +36,9 @@ void tcp_server_task(void *pvParameters) {
     struct sockaddr_in dest_addr;
     dest_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     dest_addr.sin_family = AF_INET;
-    dest_addr.sin_port = htons(TCP_SRC_SEVER_PORT);
+    dest_addr.sin_port = htons(UDP_SRC_SEVER_PORT);
     server.client_queue = xQueueCreate(10, sizeof(ClientInfo));
-    server.sockfd = socket(addr_family, SOCK_STREAM, ip_protocol);
+    server.sockfd = socket(addr_family, SOCK_DGRAM, ip_protocol);
     if (server.sockfd < 0) {
         printf("Unable to create socket: errno %d\n", errno);
         vTaskDelete(NULL);
@@ -53,7 +53,7 @@ void tcp_server_task(void *pvParameters) {
         vTaskDelete(NULL);
         return;
     }
-    printf("Socket bound, port %d\n", TCP_SRC_SEVER_PORT);
+    printf("Socket bound, port %d\n", UDP_SRC_SEVER_PORT);
 
     err = listen(server.sockfd, 1);
     if (err != 0) {
@@ -100,7 +100,7 @@ void tcp_server_task(void *pvParameters) {
     vTaskDelete(NULL);
 }
 
-void start_tcp_server() {
-    xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
+void start_udp_server() {
+    xTaskCreate(udp_server_task, "udp_server_task", 4096, NULL, 5, NULL);
     
 }

@@ -1,5 +1,5 @@
-#include "tcp_client_item.h"
-#include "lwip/tcp.h"
+#include "udp_client_item.h"
+#include "lwip/udp.h"
 #include "sockets.h"
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
@@ -12,25 +12,25 @@
 typedef struct {
     int sockfd;
     struct sockaddr_in server_addr;
-} TcpClient;
+} udpClient;
 
-TcpClient client;
+static udpClient client;
 static struct sockaddr_in serverAddr;
-int addr_family = AF_INET;
-int ip_protocol = IPPROTO_IP;
+static int addr_family = AF_INET;
+static int ip_protocol = IPPROTO_IP;
 
 // Mutex for socket
 static SemaphoreHandle_t xSocketMutex;
 
-osThreadId_t sendTaskHandle;
-const osThreadAttr_t sendTask_attributes = {
+static osThreadId_t sendTaskHandle;
+static const osThreadAttr_t sendTask_attributes = {
   .name = "sendTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
-osThreadId_t recvTaskHandle;
-const osThreadAttr_t recvTask_attributes = {
+static osThreadId_t recvTaskHandle;
+static const osThreadAttr_t recvTask_attributes = {
   .name = "recvTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
@@ -38,12 +38,12 @@ const osThreadAttr_t recvTask_attributes = {
 
 
 // Function prototypes
-void sendTask(void *pvParameters);
-void recvTask(void *pvParameters);
-int tcpClientInit(void);
+static void sendTask(void *pvParameters);
+static void recvTask(void *pvParameters);
+static int udpClientInit(void);
 
 
-void handle_lwip_error(err_t err) {
+static void handle_lwip_error(err_t err) {
     switch (err) {
         case ERR_OK:
             printf("No error, everything OK.\n");
@@ -103,20 +103,20 @@ void handle_lwip_error(err_t err) {
 }
 
 
-int tcpClientInit(){
+static int udpClientInit(){
     
     // Create socket
-    client.sockfd = socket(addr_family, SOCK_STREAM, ip_protocol);
+    client.sockfd = socket(addr_family, SOCK_DGRAM, ip_protocol);
     if (client.sockfd < 0) {
         printf("Unable to create socket: errno %d\n", errno);
         return -1;
     }
-    printf("Socket created, connecting to %s:%d\n", TCP_DEST_SERVER_IP, TCP_DEST_SEVER_PORT);
+    printf("Socket created, connecting to %s:%d\n", UDP_DEST_SERVER_IP, UDP_DEST_SEVER_PORT);
 
     // Configure server address
-    client.server_addr.sin_addr.s_addr = inet_addr(TCP_DEST_SERVER_IP);
+    client.server_addr.sin_addr.s_addr = inet_addr(UDP_DEST_SERVER_IP);
     client.server_addr.sin_family = AF_INET;
-    client.server_addr.sin_port = htons(TCP_DEST_SEVER_PORT);
+    client.server_addr.sin_port = htons(UDP_DEST_SEVER_PORT);
     memset(&(client.server_addr.sin_zero), 0, sizeof(client.server_addr.sin_zero));
 
     // Connect to server
@@ -143,13 +143,13 @@ int tcpClientInit(){
 
 
 // Task for sending data
-void sendTask(void *pvParameters) {
-    char sendBuf[TCP_SEND_BUF_SIZE];
+static void sendTask(void *pvParameters) {
+    char sendBuf[UDP_SEND_BUF_SIZE];
     int err = 0;
     while (1) {
         static uint8_t errtimes = 0;
         // Fill send buffer with data
-        snprintf(sendBuf, TCP_SEND_BUF_SIZE, "Hello, Server!");
+        snprintf(sendBuf, UDP_SEND_BUF_SIZE, "Hello, Server!");
         
         // Lock the socket for sending
         if (xSemaphoreTake(xSocketMutex, portMAX_DELAY) == pdTRUE) {
@@ -172,8 +172,8 @@ void sendTask(void *pvParameters) {
 }
 
 // Task for receiving data
-void recvTask(void *pvParameters) {
-    char recvBuf[TCP_RECV_BUF_SIZE];
+static void recvTask(void *pvParameters) {
+    char recvBuf[UDP_RECV_BUF_SIZE];
     int bytesRead;
     while (1) {
         // Lock the socket for receiving
@@ -192,8 +192,8 @@ void recvTask(void *pvParameters) {
     }
 }
 
-void start_tcp_client() {
-    int err = tcpClientInit();
+void start_udp_client() {
+    int err = udpClientInit();
         // Create Send Task
     sendTaskHandle = osThreadNew(sendTask, NULL, &sendTask_attributes);
 
@@ -202,5 +202,33 @@ void start_tcp_client() {
 
     // Delete main task
     vTaskDelete(NULL);
+
+    // while (1) {
+    //     static int sendtimes = 0;
+    //     int len = snprintf(tx_buffer, sizeof(tx_buffer), "Hello server! %d",sendtimes);
+    //     int err = send(client.sockfd, tx_buffer, len, 0);
+    //     sendtimes++;
+    //     if (err < 0) {
+    //         printf("Error occurred during sending: errno %d\n", errno);
+    //         break;
+    //     }
+
+    //     len = recv(client.sockfd, rx_buffer, sizeof(rx_buffer) - 1, 0);
+    //     if (len < 0) {
+    //         printf("Recv failed: errno %d\n", errno);
+    //         break;
+    //     } else if (len == 0) {
+    //         printf("Connection closed\n");
+    //         break;
+    //     } else {
+    //         rx_buffer[len] = 0;
+    //         printf("Received %d bytes: %s\n", len, rx_buffer);
+    //     }
+
+    //     vTaskDelay(20 / portTICK_PERIOD_MS);
+    // }
+
+    // close(client.sockfd);
+    // vTaskDelete(NULL);
 
 }

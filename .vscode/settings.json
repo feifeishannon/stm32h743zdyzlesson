@@ -27,6 +27,9 @@
         "netdb.h": "c",
         "tcp_server_item.h": "c",
         "sys.h": "c",
-        "tcp_client_item.h": "c"
+        "tcp_client_item.h": "c",
+        "udp_client_item.h": "c",
+        "udp_server_item.h": "c",
+        "cc.h": "c"
     }
 }

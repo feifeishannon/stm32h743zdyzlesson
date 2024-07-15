@@ -1,33 +1,4 @@
-
-
-#include "lwip/apps/lwiperf.h"
-
-#include "lwip/tcp.h"
-#include "lwip/sys.h"
-#include "string.h"
-#include <stdio.h>
-#include "uart_device.h"
 #include "socket_device.h"
-#include "sockets.h"
-#include "pcf8574.h"
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "queue.h"
-
-/**
- * @brief  tcp各端口默认分配
- * @note   
- * @retval None
- */
-#define SRC_SEVER_TCP_PORT      5001    
-#define SRC_CLIENT_TCP_PORT     5002
-#define DEST_SEVER_TCP_PORT     5003
-#define DEST_CLIENT_TCP_PORT    5004
-
-#define SRC_SEVER_UDP_PORT      5011    
-#define SRC_CLIENT_UDP_PORT     5012
-#define DEST_SEVER_UDP_PORT     5013
-#define DEST_CLIENT_UDP_PORT    5014
 
 
 typedef struct {
