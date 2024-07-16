@@ -30,6 +30,7 @@
         "tcp_client_item.h": "c",
         "udp_client_item.h": "c",
         "udp_server_item.h": "c",
-        "cc.h": "c"
+        "cc.h": "c",
+        "stdio.h": "c"
     }
 }

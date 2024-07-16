@@ -88,7 +88,8 @@ void tcp_server_task(void *pvParameters) {
                 break;
             } else {
                 rx_buffer[len] = 0;
-                printf("Received %d bytes: %s\n", len, rx_buffer);
+                printf("tcp server[%s:%d] Received: %s\n", 
+                    TCP_DEST_SERVER_IP, TCP_SRC_SEVER_PORT, rx_buffer);
                 send(sock, rx_buffer, len, 0);
             }
         }

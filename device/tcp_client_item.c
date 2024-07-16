@@ -184,7 +184,8 @@ void recvTask(void *pvParameters) {
 
         if (bytesRead > 0) {
             recvBuf[bytesRead] = '\0';
-            printf("Received: %s\n", recvBuf);
+            printf("tcp client[%s:%d] Received: %s\n", 
+                    TCP_DEST_SERVER_IP, TCP_DEST_SEVER_PORT, recvBuf);
         }
 
         // Delay before next recv

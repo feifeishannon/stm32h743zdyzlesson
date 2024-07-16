@@ -105,29 +105,29 @@ static void handle_lwip_error(err_t err) {
 
 static int udpClientInit(){
     
-    // Create socket
+    // 创建Socket
     client.sockfd = socket(addr_family, SOCK_DGRAM, ip_protocol);
     if (client.sockfd < 0) {
         printf("Unable to create socket: errno %d\n", errno);
         return -1;
     }
-    printf("Socket created, connecting to %s:%d\n", UDP_DEST_SERVER_IP, UDP_DEST_SEVER_PORT);
+    printf("UDP client Socket created, connecting to %s:%d\n", UDP_DEST_SERVER_IP, UDP_DEST_SEVER_PORT);
 
-    // Configure server address
+    // 配置服务器地址
     client.server_addr.sin_addr.s_addr = inet_addr(UDP_DEST_SERVER_IP);
     client.server_addr.sin_family = AF_INET;
     client.server_addr.sin_port = htons(UDP_DEST_SEVER_PORT);
     memset(&(client.server_addr.sin_zero), 0, sizeof(client.server_addr.sin_zero));
 
-    // Connect to server
-    int err = connect(client.sockfd, (struct sockaddr *)&client.server_addr, sizeof(client.server_addr));
-    if (err != 0) {
+    // 绑定Socket
+    int err = bind(client.sockfd, (struct sockaddr *)&client.server_addr, sizeof(client.server_addr));
+    // int err = connect(client.sockfd, (struct sockaddr *)&client.server_addr, sizeof(client.server_addr));
+    if (err < 0) {
         handle_lwip_error(errno);
-        // printf("Socket unable to connect: errno %d\n", errno);
         close(client.sockfd);
         return -1;
     }
-    printf("Successfully connected\n");
+    printf("UDP client listening on port %d\n", UDP_DEST_SEVER_PORT);
 
     // Initialize socket mutex
     xSocketMutex = xSemaphoreCreateMutex();
@@ -184,7 +184,8 @@ static void recvTask(void *pvParameters) {
 
         if (bytesRead > 0) {
             recvBuf[bytesRead] = '\0';
-            printf("Received: %s\n", recvBuf);
+            printf("udp server[%s:%d] Received: %s\n", 
+                    UDP_DEST_SERVER_IP, UDP_DEST_SEVER_PORT, recvBuf);
         }
 
         // Delay before next recv
