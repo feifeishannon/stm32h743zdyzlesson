@@ -45,7 +45,7 @@ int udpServerInit(){
         vTaskDelete(NULL);
         return -1;
     }
-    printf("UDP server bind on port %d\n", UDP_SRC_SEVER_PORT);
+    printf("UDP server [%s] bind on port %d\n", UDP_DEST_SERVER_IP, UDP_SRC_SEVER_PORT);
 
     // 初始化客户端地址结构体和长度
     server.client_addr_len = sizeof(server.client_addr);
@@ -72,6 +72,16 @@ void udp_server_task(void *pvParameters) {
             printf("udp server[%s:%d] Received: %s\n", 
                 UDP_DEST_SERVER_IP, UDP_SRC_SEVER_PORT, rx_buffer);
             send(server.sockfd, rx_buffer, len, 0);
+            const char *reply_msg = "Hello from server";
+            int bytes_sent = sendto(server.sockfd, reply_msg, strlen(reply_msg), 0,
+                                    (struct sockaddr *)&server.client_addr, server.client_addr_len);
+
+            if (bytes_sent < 0) {
+                printf("Send failed");
+            } else {
+                printf("Sent response to client %s:%d\n",
+                        inet_ntoa(server.client_addr.sin_addr), ntohs(server.client_addr.sin_port));
+            }
         }
     }
 

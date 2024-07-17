@@ -19,8 +19,7 @@ static struct sockaddr_in serverAddr;
 int addr_family = AF_INET;
 int ip_protocol = IPPROTO_IP;
 
-// Mutex for socket
-static SemaphoreHandle_t xSocketMutex;
+
 
 osThreadId_t sendTaskHandle;
 const osThreadAttr_t sendTask_attributes = {

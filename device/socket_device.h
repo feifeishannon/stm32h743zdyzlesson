@@ -47,7 +47,7 @@ typedef struct Socekt_Device
 }Socekt_DeviceType;
 
 extern const u8_t lwiperf_txbuf_const[1600];
-
+extern SemaphoreHandle_t xSocketMutex;
 
 Socekt_DeviceType *Get_Socekt_Device(char *name);
 

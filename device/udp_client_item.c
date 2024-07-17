@@ -19,19 +19,16 @@ static struct sockaddr_in serverAddr;
 static int addr_family = AF_INET;
 static int ip_protocol = IPPROTO_IP;
 
-// Mutex for socket
-static SemaphoreHandle_t xSocketMutex;
-
 static osThreadId_t sendTaskHandle;
 static const osThreadAttr_t sendTask_attributes = {
-  .name = "sendTask",
+  .name = "udpsendTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 static osThreadId_t recvTaskHandle;
 static const osThreadAttr_t recvTask_attributes = {
-  .name = "recvTask",
+  .name = "udprecvTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -129,15 +126,6 @@ static int udpClientInit(){
     }
     printf("UDP client listening on port %d\n", UDP_DEST_SEVER_PORT);
 
-    // Initialize socket mutex
-    xSocketMutex = xSemaphoreCreateMutex();
-    if (xSocketMutex == NULL)
-    {
-        close(client.sockfd);
-        handle_lwip_error(errno);
-        // Handle error
-        return -1;
-    }
     return 0 ;
 }
 

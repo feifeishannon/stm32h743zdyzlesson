@@ -6,6 +6,9 @@ typedef struct {
     struct sockaddr_in server_addr;
 } TcpServer;
 
+// Mutex for socket
+SemaphoreHandle_t xSocketMutex;
+
 const u8_t lwiperf_txbuf_const[1600] = {
     '0',
     '1',
@@ -1644,60 +1647,26 @@ void lwiperf_app_init(void)
     // UNLOCK_TCPIP_CORE();
 }
 
-void tcp_app_init(void)
+/**
+ * @brief  创建socket公用接口结构
+ * @note   
+ * @todo    1、创建socket线程锁未做线程保护，多线程调用此函数时可能产生数据竞争导致异常
+ *          2、返回值未规划
+ * @retval None
+ */
+void socket_device_init(void)
 {
-    int sock = -1;
-    struct sockaddr_in client_addr;
-    ip4_addr_t ipaddr;
-    static uint8_t i = 0;
-    static uint8_t j = 0;
-    static uint8_t m = 0;
+    uint8_t timeOut_t = 0;
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0)
-    {
-        // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
-
-        // printf("Socket Error\r\n");
-        vTaskDelay(100);
-        i++;
-        // printf("Socket err %d times\r\n",i);
-    }
-
-
-    client_addr.sin_family = AF_INET;
-    //client_addr.sin_port = htons(DEST_PORT);
-    client_addr.sin_addr.s_addr = ipaddr.addr;
-    memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
-
-    if (connect(sock, (struct sockaddr *)&client_addr, sizeof(struct sockaddr)) == -1)
-    {
-        // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
-        // printf("Failed to connect\r\n");
-
-        vTaskDelay(100);
-        closesocket(sock);
-        vTaskDelay(100);
-        j++;
-        printf("connect err %d times\r\n", j);
-    }
-
-    // printf("Connecting\r\n");
-    while (1)
-    {
-
-        if (write(sock, lwiperf_txbuf_const, sizeof(lwiperf_txbuf_const)) < 0)
-        {
-            m++;
-            vTaskDelay(1000);
-            // printf("write err %d times\r\n",m);
-            break;
+    // 创建互斥信号量   @todo: 需求锁定线程切换，防止同步创建多次
+    while (xSocketMutex == NULL) {
+        if(timeOut_t++>10) {
+            printf("创建Socket线程锁失败");
+            return; // 创建socket收发线程锁失败
         }
-        m = 0;
-        vTaskDelay(1000);
+        xSocketMutex = xSemaphoreCreateMutex();
     }
-    printf("closesocket\r\n");
-    closesocket(sock);
+
 }
 
 
