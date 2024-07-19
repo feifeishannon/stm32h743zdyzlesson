@@ -102,6 +102,8 @@ void tcp_server_task(void *pvParameters) {
 }
 
 void start_tcp_server() {
+    socket_device_init();
+
     xTaskCreate(tcp_server_task, "tcp_server_task", 4096, NULL, 5, NULL);
     
 }

@@ -1654,7 +1654,7 @@ void lwiperf_app_init(void)
  *          2、返回值未规划
  * @retval None
  */
-void socket_device_init(void)
+int socket_device_init(void)
 {
     uint8_t timeOut_t = 0;
 
@@ -1662,11 +1662,70 @@ void socket_device_init(void)
     while (xSocketMutex == NULL) {
         if(timeOut_t++>10) {
             printf("创建Socket线程锁失败");
-            return; // 创建socket收发线程锁失败
+            return -1; // 创建socket收发线程锁失败
         }
         xSocketMutex = xSemaphoreCreateMutex();
     }
+    return 0; //创建成功
+}
 
+void handle_lwip_error(err_t err) {
+    switch (err) {
+        case ERR_OK:
+            printf("No error, everything OK.\n");
+            break;
+        case ERR_MEM:
+            printf("Out of memory error.\n");
+            break;
+        case ERR_BUF:
+            printf("Buffer error.\n");
+            break;
+        case ERR_TIMEOUT:
+            printf("Timeout.\n");
+            break;
+        case ERR_RTE:
+            printf("Routing problem.\n");
+            break;
+        case ERR_INPROGRESS:
+            printf("Operation in progress.\n");
+            break;
+        case ERR_VAL:
+            printf("Illegal value.\n");
+            break;
+        case ERR_WOULDBLOCK:
+            printf("Operation would block.\n");
+            break;
+        case ERR_USE:
+            printf("Address in use.\n");
+            break;
+        case ERR_ALREADY:
+            printf("Already connecting.\n");
+            break;
+        case ERR_ISCONN:
+            printf("Conn already established.\n");
+            break;
+        case ERR_CONN:
+            printf("Not connected.\n");
+            break;
+        case ERR_IF:
+            printf("Low-level netif error.\n");
+            break;
+        case ERR_ABRT:
+            printf("Connection aborted.\n");
+            break;
+        case ERR_RST:
+            printf("Connection reset.\n");
+            break;
+        case ERR_CLSD:
+            printf("Connection closed.\n");
+            break;
+        case ERR_ARG:
+            printf("Illegal argument.\n");
+            break;
+        default:
+            printf("Unknown error: %d\n", err);
+            break;
+    }
 }
 
 

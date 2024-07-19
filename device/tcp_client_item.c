@@ -23,14 +23,14 @@ int ip_protocol = IPPROTO_IP;
 
 osThreadId_t sendTaskHandle;
 const osThreadAttr_t sendTask_attributes = {
-  .name = "sendTask",
+  .name = "tcpsendTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t recvTaskHandle;
 const osThreadAttr_t recvTask_attributes = {
-  .name = "recvTask",
+  .name = "tcprecvTask",
   .stack_size = 1024 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -40,66 +40,6 @@ const osThreadAttr_t recvTask_attributes = {
 void sendTask(void *pvParameters);
 void recvTask(void *pvParameters);
 int tcpClientInit(void);
-
-
-void handle_lwip_error(err_t err) {
-    switch (err) {
-        case ERR_OK:
-            printf("No error, everything OK.\n");
-            break;
-        case ERR_MEM:
-            printf("Out of memory error.\n");
-            break;
-        case ERR_BUF:
-            printf("Buffer error.\n");
-            break;
-        case ERR_TIMEOUT:
-            printf("Timeout.\n");
-            break;
-        case ERR_RTE:
-            printf("Routing problem.\n");
-            break;
-        case ERR_INPROGRESS:
-            printf("Operation in progress.\n");
-            break;
-        case ERR_VAL:
-            printf("Illegal value.\n");
-            break;
-        case ERR_WOULDBLOCK:
-            printf("Operation would block.\n");
-            break;
-        case ERR_USE:
-            printf("Address in use.\n");
-            break;
-        case ERR_ALREADY:
-            printf("Already connecting.\n");
-            break;
-        case ERR_ISCONN:
-            printf("Conn already established.\n");
-            break;
-        case ERR_CONN:
-            printf("Not connected.\n");
-            break;
-        case ERR_IF:
-            printf("Low-level netif error.\n");
-            break;
-        case ERR_ABRT:
-            printf("Connection aborted.\n");
-            break;
-        case ERR_RST:
-            printf("Connection reset.\n");
-            break;
-        case ERR_CLSD:
-            printf("Connection closed.\n");
-            break;
-        case ERR_ARG:
-            printf("Illegal argument.\n");
-            break;
-        default:
-            printf("Unknown error: %d\n", err);
-            break;
-    }
-}
 
 
 int tcpClientInit(){
@@ -193,13 +133,13 @@ void recvTask(void *pvParameters) {
 }
 
 void start_tcp_client() {
-    int err = tcpClientInit();
+    if(tcpClientInit()>=0) {
         // Create Send Task
-    sendTaskHandle = osThreadNew(sendTask, NULL, &sendTask_attributes);
+        sendTaskHandle = osThreadNew(sendTask, NULL, &sendTask_attributes);
 
-    // Create Recv Task
-    recvTaskHandle = osThreadNew(recvTask, NULL, &recvTask_attributes);
-
+        // Create Recv Task
+        recvTaskHandle = osThreadNew(recvTask, NULL, &recvTask_attributes);
+    }
     // Delete main task
     vTaskDelete(NULL);
 

@@ -479,10 +479,10 @@ void enternetStart(void *argument)
     // start_tcp_client();
 
     // 启动TCP服务器
-    start_udp_server();
+    // start_udp_server();
 
     // 启动TCP客户端
-    // start_udp_client();
+    start_udp_client();
   /* Infinite loop */
   for(;;)
   {

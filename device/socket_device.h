@@ -50,6 +50,7 @@ extern const u8_t lwiperf_txbuf_const[1600];
 extern SemaphoreHandle_t xSocketMutex;
 
 Socekt_DeviceType *Get_Socekt_Device(char *name);
-
+int socket_device_init(void);
+void handle_lwip_error(err_t err);
 
 #endif /* __SOCKET_DEVICE_H */
