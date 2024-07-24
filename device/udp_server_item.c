@@ -19,7 +19,6 @@ typedef struct {
 
 static udpServer server;
 static char rx_buffer[UDP_RECV_BUF_SIZE];
-static char addr_str[128];
 
 int udpServerInit(){
     // ÅäÖÃ·şÎñÆ÷µØÖ·

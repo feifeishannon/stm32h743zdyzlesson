@@ -50,7 +50,7 @@ int tcpClientInit(){
         printf("Unable to create socket: errno %d\n", errno);
         return -1;
     }
-    printf("Socket created, connecting to %s:%d\n", TCP_DEST_SERVER_IP, TCP_DEST_SEVER_PORT);
+    printf("TCP Client Socket created, connecting to %s:%d\n", TCP_DEST_SERVER_IP, TCP_DEST_SEVER_PORT);
 
     // Configure server address
     client.server_addr.sin_addr.s_addr = inet_addr(TCP_DEST_SERVER_IP);
@@ -66,7 +66,7 @@ int tcpClientInit(){
         close(client.sockfd);
         return -1;
     }
-    printf("Successfully connected\n");
+    printf("TCP Client Socket Successfully connected\n");
 
     // Initialize socket mutex
     xSocketMutex = xSemaphoreCreateMutex();
@@ -141,6 +141,6 @@ void start_tcp_client() {
         recvTaskHandle = osThreadNew(recvTask, NULL, &recvTask_attributes);
     }
     // Delete main task
-    vTaskDelete(NULL);
+    // vTaskDelete(NULL);
 
 }

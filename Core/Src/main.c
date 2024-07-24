@@ -5,6 +5,7 @@
   * @brief          : Main program body
   ******************************************************************************
   * @attention
+  * @todo : 1、增加printf线程和队列功能
   *
   * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
@@ -473,7 +474,7 @@ void enternetStart(void *argument)
 
   while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // 启动TCP服务器
-    // start_tcp_server();
+    start_tcp_server();
 
     // // 启动TCP客户端
     // start_tcp_client();
@@ -482,7 +483,7 @@ void enternetStart(void *argument)
     // start_udp_server();
 
     // 启动TCP客户端
-    start_udp_client();
+    // start_udp_client();
   /* Infinite loop */
   for(;;)
   {

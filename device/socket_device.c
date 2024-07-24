@@ -1648,7 +1648,7 @@ void lwiperf_app_init(void)
 }
 
 /**
- * @brief  创建socket公用接口结构
+ * @brief  创建socket公用接口结构,获取数据收发线程锁
  * @note   
  * @todo    1、创建socket线程锁未做线程保护，多线程调用此函数时可能产生数据竞争导致异常
  *          2、返回值未规划
