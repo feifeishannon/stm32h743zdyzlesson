@@ -205,8 +205,8 @@ static void tcp_listen_task(void *arg){
         //     printf("Failed to add client to queue\n");
         //     close(clientInfo->client_sock);
         // } else {
-            xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 4096, clientInfo, 5, NULL);
-            xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, clientInfo, 5, NULL);
+            xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 1024, clientInfo, 5, NULL);
+            xTaskCreate(tcp_send_task, "TCP_Send_Task", 1024, clientInfo, 5, NULL);
             // printf("Client added to queue\n");
         // }
         // prvUnlockQueue(tcp_server.client_queue);
@@ -215,6 +215,6 @@ static void tcp_listen_task(void *arg){
 
 void start_tcp_server() {
     if(tcpServerInit()>=0) {
-        xTaskCreate(tcp_listen_task, "TCP_listen_Task", 4096, NULL, 5, NULL);
+        xTaskCreate(tcp_listen_task, "TCP_listen_Task", 1024, NULL, 5, NULL);
     }
 }
