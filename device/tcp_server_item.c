@@ -35,6 +35,13 @@ static void tcp_recv_task(void *arg)
     ClientInfo *clientInfo = (ClientInfo *)arg;
     char buffer[128];
     int bytes_received;
+    int should_clean_up = 0;
+    static SemaphoreHandle_t cleanupSemaphore = NULL;
+    // Initialize the cleanup semaphore if it hasn't been initialized yet
+    if (cleanupSemaphore == NULL) {
+        cleanupSemaphore = xSemaphoreCreateBinary();
+        xSemaphoreGive(cleanupSemaphore); // Start with semaphore available
+    }
     if (xSemaphoreTake(printf_xMutex, (TickType_t) 20) == pdTRUE) {
         printf("xTaskCreate tcp_recv_task[%s:%d]\n",
                 inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port));
@@ -47,6 +54,7 @@ static void tcp_recv_task(void *arg)
         if (bytes_received < 0) {
             continue;
         } else if (bytes_received == 0) {
+            should_clean_up = 1;
             printf("Server disconnected\n");
             break;
         } else{
@@ -56,10 +64,18 @@ static void tcp_recv_task(void *arg)
             xQueueSend(tcp_server.client_data_queue, &buffer, portMAX_DELAY);
         }
     }
+    // Take the semaphore to ensure exclusive access to cleanup
+    if (xSemaphoreTake(cleanupSemaphore, portMAX_DELAY) == pdTRUE) {
+        // Close the connection and free the memory
+        if (should_clean_up) {
+            printf("recv err, close client %s:%d \n",
+                    inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port));
+            close(clientInfo->client_sock);
+            free(clientInfo);
+        }
+        xSemaphoreGive(cleanupSemaphore);
+    }
 
-    // Close the connection
-    close(clientInfo->client_sock);
-    free(clientInfo);
     vTaskDelete(NULL);
 }
 
@@ -68,6 +84,15 @@ static void tcp_send_task(void *arg)
     ClientInfo *clientInfo = (ClientInfo *)arg;
     // const char *msg = "Hello from TCP server!";
     char msg[128];
+    int should_clean_up = 0;
+    static SemaphoreHandle_t cleanupSemaphore = NULL;
+
+
+    // Initialize the cleanup semaphore if it hasn't been initialized yet
+    if (cleanupSemaphore == NULL) {
+        cleanupSemaphore = xSemaphoreCreateBinary();
+        xSemaphoreGive(cleanupSemaphore); // Start with semaphore available
+    }
     if (xSemaphoreTake(printf_xMutex, (TickType_t) 20) == pdTRUE) {
         printf("xTaskCreate tcp_send_task[%s:%d]\n",
                 inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port));
@@ -81,6 +106,7 @@ static void tcp_send_task(void *arg)
         if (xQueueReceive(tcp_server.client_data_queue, &msg, portMAX_DELAY) == pdPASS) {
             // Send the message to the server
             if (send(clientInfo->client_sock, msg, strlen(msg), 0) < 0) {
+                should_clean_up = 1;
                 printf("Failed to send data\n");
                 continue;
             }
@@ -91,8 +117,17 @@ static void tcp_send_task(void *arg)
         }
     }
 
-    // Close the connection
-    close(clientInfo->client_sock);
+    // Take the semaphore to ensure exclusive access to cleanup
+    if (xSemaphoreTake(cleanupSemaphore, portMAX_DELAY) == pdTRUE) {
+        // Close the connection and free the memory
+        if (should_clean_up) {
+            printf("send err, close client %s:%d \n",
+                    inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port));
+            close(clientInfo->client_sock);
+            free(clientInfo);
+        }
+        xSemaphoreGive(cleanupSemaphore);
+    }
     vTaskDelete(NULL);
 }
 
@@ -203,14 +238,14 @@ static void tcp_listen_task(void *arg){
 
         // prvLockQueue(tcp_server.client_queue);
         // 将客户端信息添加到队列
-        if (xQueueSend(tcp_server.client_queue, clientInfo, portMAX_DELAY) != pdPASS) {
-            printf("Failed to add client to queue\n");
-            close(clientInfo->client_sock);
-        } else {
+        // if (xQueueSend(tcp_server.client_queue, clientInfo, portMAX_DELAY) != pdPASS) {
+        //     printf("Failed to add client to queue\n");
+        //     close(clientInfo->client_sock);
+        // } else {
             xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 4096, clientInfo, 5, NULL);
             xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, clientInfo, 5, NULL);
-            printf("Client added to queue\n");
-        }
+            // printf("Client added to queue\n");
+        // }
         // prvUnlockQueue(tcp_server.client_queue);
     }
 }
