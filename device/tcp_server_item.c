@@ -15,12 +15,12 @@ typedef struct {
     struct sockaddr_in client_addr;     // client address
     socklen_t sockaddr_len;
     QueueHandle_t client_queue;         // client queue handle
-    QueueHandle_t client_data_queue;    // client send data queue handle
 } TcpServer;
 
 typedef struct {
     int client_sock;
     struct sockaddr_in clientAddr;
+    QueueHandle_t client_data_queue;    // client send data queue handle
 } ClientInfo;
 
 static void tcp_server_task(void *arg);
@@ -59,9 +59,9 @@ static void tcp_recv_task(void *arg)
             break;
         } else{
             buffer[bytes_received] = '\0';
-            printf("Received response from client %s:%d “%s”\n",
+            printf("Received response from client \t%s:%d \t“%s”\n",
                     inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port), buffer);
-            xQueueSend(tcp_server.client_data_queue, &buffer, portMAX_DELAY);
+            xQueueSend(clientInfo->client_data_queue, &buffer, portMAX_DELAY);
         }
     }
     // Take the semaphore to ensure exclusive access to cleanup
@@ -103,14 +103,14 @@ static void tcp_send_task(void *arg)
     while (1)
     {
         // Wait for a message to send
-        if (xQueueReceive(tcp_server.client_data_queue, &msg, portMAX_DELAY) == pdPASS) {
+        if (xQueueReceive(clientInfo->client_data_queue, &msg, portMAX_DELAY) == pdPASS) {
             // Send the message to the server
             if (send(clientInfo->client_sock, msg, strlen(msg), 0) < 0) {
                 should_clean_up = 1;
                 printf("Failed to send data\n");
                 continue;
             }
-            printf("send response to client %s:%d “%s”\n",
+            printf("send response to client \t%s:%d \t“%s”\n",
                     inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port), msg);
             // Free the message buffer
             memset(msg, 0, sizeof(msg));
@@ -131,12 +131,9 @@ static void tcp_send_task(void *arg)
     vTaskDelete(NULL);
 }
 
-
-
 int tcpServerInit(){
     printf_xMutex = xSemaphoreCreateMutex();
     tcp_server.client_queue = xQueueCreate(10, sizeof(ClientInfo));
-    tcp_server.client_data_queue = xQueueCreate(100, sizeof(ClientInfo));
     if (tcp_server.client_queue == NULL) {
         printf("Failed to create client queue\n");
         return -1;
@@ -180,46 +177,6 @@ int tcpServerInit(){
 
 }
 
-
-void tcp_server_task_single_client(void *pvParameters) {
-    char rx_buffer[128];
-    char addr_str[128];
-    while (1) {
-        struct sockaddr_in source_addr;
-        socklen_t addr_len = sizeof(source_addr);
-        int sock = accept(tcp_server.sockfd, (struct sockaddr *)&source_addr, &addr_len);
-        if (sock < 0) {
-            printf("Unable to accept connection: errno %d\n", errno);
-            break;
-        }
-        inet_ntoa_r(source_addr.sin_addr, addr_str, sizeof(addr_str) - 1);
-        printf("Socket accepted ip address: %s\n", addr_str);
-
-        ClientInfo client_info = {.client_sock = sock};
-        xQueueSend(tcp_server.client_queue, &client_info, portMAX_DELAY);
-
-        while (1) {
-            int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-            if (len < 0) {
-                printf("Recv failed: errno %d\n", errno);
-                break;
-            } else if (len == 0) {
-                printf("Connection closed\n");
-                break;
-            } else {
-                rx_buffer[len] = 0;
-                printf("Received %d bytes: %s\n", len, rx_buffer);
-                send(sock, rx_buffer, len, 0);
-            }
-        }
-
-        close(sock);
-    }
-
-    close(tcp_server.sockfd);
-    vTaskDelete(NULL);
-}
-
 static void tcp_listen_task(void *arg){
     while (1)
     {
@@ -227,6 +184,12 @@ static void tcp_listen_task(void *arg){
         socklen_t clientLen = sizeof(clientInfo->clientAddr);
         if (clientInfo == NULL) {
             printf("Memory allocation clientInfo failed\n");
+            continue;
+        }
+        clientInfo->client_data_queue = xQueueCreate(10, sizeof(char[128])); // 独立的发送队列
+        if (clientInfo->client_data_queue == NULL) {
+            printf("Failed to create client data queue\n");
+            free(clientInfo);
             continue;
         }
         clientInfo->client_sock = accept(tcp_server.sockfd, (struct sockaddr*)&clientInfo->clientAddr, &clientLen);
@@ -253,8 +216,5 @@ static void tcp_listen_task(void *arg){
 void start_tcp_server() {
     if(tcpServerInit()>=0) {
         xTaskCreate(tcp_listen_task, "TCP_listen_Task", 4096, NULL, 5, NULL);
-        // xTaskCreate(tcp_server_task_single_client, "TCP_listen_Taskok", 4096, NULL, 5, NULL);
-        
     }
-    
 }
