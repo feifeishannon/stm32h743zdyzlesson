@@ -1,14 +1,9 @@
 #include "socket_device.h"
 
 
-typedef struct {
-    int sockfd;
-    struct sockaddr_in server_addr;
-} TcpServer;
 
-// Mutex for socket
-SemaphoreHandle_t xSocketMutex;
 
+SocketDevice socketDevice;
 const u8_t lwiperf_txbuf_const[1600] = {
     '0',
     '1',
@@ -1648,23 +1643,89 @@ void lwiperf_app_init(void)
 }
 
 /**
- * @brief  创建socket公用接口结构,获取数据收发线程锁
- * @note   
- * @todo    1、创建socket线程锁未做线程保护，多线程调用此函数时可能产生数据竞争导致异常
- *          2、返回值未规划
- * @retval None
+ * @brief  创建 socket 公用接口结构, 获取数据收发线程锁
+ * @note   由上层（tcp、udp 的 s/c 端）创建
+ * @param  xSocketDeviceMutex: socket_device 初始化互斥锁，防止多线程初始化时异常
+ * @param  sockType: socket 类型 (SOCK_STREAM for TCP, SOCK_DGRAM for UDP)
+ * @param  port: 端口号
+ * @param  ipAddr: IP 地址 (如果是客户端 socket，则需要指定服务端 IP 地址)
+ * @retval SocketDevice* 返回初始化的 socket 设备指针，失败返回 NULL
  */
-int socket_device_init(void)
-{
+SocketDevice* __socket_device_init(SemaphoreHandle_t xSocketDeviceMutex, int sockType, uint16_t port, const char* ipAddr) {
+    SocketDevice* socketDevice = NULL;
     uint8_t timeOut_t = 0;
 
+    // 等待信号量释放
+    if (xSemaphoreTake(xSocketDeviceMutex, (TickType_t) 20) == pdTRUE) {
+        socketDevice = (SocketDevice*) malloc(sizeof(SocketDevice));
+        if (socketDevice == NULL) {
+            printf("分配内存失败");
+            xSemaphoreGive(xSocketDeviceMutex);
+            return NULL;
+        }
+
+        socketDevice->sockfd = lwip_socket(AF_INET, sockType, 0);
+        if (socketDevice->sockfd < 0) {
+            printf("创建 socket 失败");
+            free(socketDevice);
+            xSemaphoreGive(xSocketDeviceMutex);
+            return NULL;
+        }
+
+        // 创建发送和接收互斥锁
+        while (socketDevice->sendOrRecvLock == NULL) {
+            if (timeOut_t++ > 10) {
+                printf("创建收发线程锁失败");
+                lwip_close(socketDevice->sockfd);
+                free(socketDevice);
+                xSemaphoreGive(xSocketDeviceMutex);
+                return NULL;
+            }
+            socketDevice->sendOrRecvLock = xSemaphoreCreateMutex();
+        }
+
+        // 设置 socket 地址
+        struct sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        addr.sin_addr.s_addr = (ipAddr != NULL) ? inet_addr(ipAddr) : INADDR_ANY;
+
+        if (sockType == SOCK_STREAM) {
+            if (ipAddr == NULL) {
+                // TCP 服务器
+                lwip_bind(socketDevice->sockfd, (struct sockaddr*)&addr, sizeof(addr));
+                lwip_listen(socketDevice->sockfd, 5);
+            } else {
+                // TCP 客户端
+                lwip_connect(socketDevice->sockfd, (struct sockaddr*)&addr, sizeof(addr));
+            }
+        } else {
+            // UDP
+            lwip_bind(socketDevice->sockfd, (struct sockaddr*)&addr, sizeof(addr));
+        }
+
+        xSemaphoreGive(xSocketDeviceMutex);
+    }
+    return socketDevice;
+}
+
+/**
+ * @brief  创建socket公用接口结构,获取数据收发线程锁
+ * @note   由上层（tcp、udp的s/c端）创建
+ * @param xSocketDeviceMutex socket_device初始化互斥锁，防止多线程初始化时异常
+ * @todo    1. 返回值未规划
+ * @retval None
+ */
+int socket_device_init()
+{
+    uint8_t timeOut_t = 0;
     // 创建互斥信号量   @todo: 需求锁定线程切换，防止同步创建多次
-    while (xSocketMutex == NULL) {
+    while (socketDevice.sendOrRecvLock == NULL) {
         if(timeOut_t++>10) {
             printf("创建Socket线程锁失败");
             return -1; // 创建socket收发线程锁失败
         }
-        xSocketMutex = xSemaphoreCreateMutex();
+        socketDevice.sendOrRecvLock = xSemaphoreCreateMutex();
     }
     return 0; //创建成功
 }

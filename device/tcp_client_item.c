@@ -68,15 +68,6 @@ int tcpClientInit(){
     }
     printf("TCP Client Socket Successfully connected\n");
 
-    // Initialize socket mutex
-    xSocketMutex = xSemaphoreCreateMutex();
-    if (xSocketMutex == NULL)
-    {
-        close(client.sockfd);
-        handle_lwip_error(errno);
-        // Handle error
-        return -1;
-    }
     return 0 ;
 }
 
@@ -91,9 +82,9 @@ void sendTask(void *pvParameters) {
         snprintf(sendBuf, TCP_SEND_BUF_SIZE, "Hello, Server!");
         
         // Lock the socket for sending
-        if (xSemaphoreTake(xSocketMutex, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(socketDevice.sendOrRecvLock, portMAX_DELAY) == pdTRUE) {
             err = send(client.sockfd, sendBuf, strlen(sendBuf), 0);
-            xSemaphoreGive(xSocketMutex);
+            xSemaphoreGive(socketDevice.sendOrRecvLock);
         }
         if (err == -1) {
             handle_lwip_error(errno);
@@ -116,9 +107,9 @@ void recvTask(void *pvParameters) {
     int bytesRead;
     while (1) {
         // Lock the socket for receiving
-        if (xSemaphoreTake(xSocketMutex, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(socketDevice.sendOrRecvLock, portMAX_DELAY) == pdTRUE) {
             bytesRead = recv(client.sockfd, recvBuf, sizeof(recvBuf) - 1, 0);
-            xSemaphoreGive(xSocketMutex);
+            xSemaphoreGive(socketDevice.sendOrRecvLock);
         }
 
         if (bytesRead > 0) {

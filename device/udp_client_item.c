@@ -73,12 +73,12 @@ static void sendTask(void *pvParameters) {
         snprintf(sendBuf, UDP_SEND_BUF_SIZE, "Hello, Server!");
         
         // Lock the socket for sending
-        if (xSemaphoreTake(xSocketMutex, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(socketDevice.sendOrRecvLock, portMAX_DELAY) == pdTRUE) {
             bytes_sent  = sendto(client.sockfd, sendBuf, strlen(sendBuf), 0,
                                 (struct sockaddr *)&client.server_addr, client.sockaddr_len);
             printf("udp client sendto server[%s:%d] %s\n", 
                     UDP_DEST_SERVER_IP, UDP_DEST_SEVER_PORT, sendBuf);
-            xSemaphoreGive(xSocketMutex);
+            xSemaphoreGive(socketDevice.sendOrRecvLock);
         }
         if (bytes_sent  == -1) {
             handle_lwip_error(errno);
@@ -101,10 +101,10 @@ static void recvTask(void *pvParameters) {
     int bytesRead;
     while (1) {
         // Lock the socket for receiving
-        if (xSemaphoreTake(xSocketMutex, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(socketDevice.sendOrRecvLock, portMAX_DELAY) == pdTRUE) {
             bytesRead = recvfrom( client.sockfd, recvBuf, sizeof(recvBuf) - 1, 0, 
                                 (struct sockaddr *)&client.server_addr, &client.sockaddr_len);
-            xSemaphoreGive(xSocketMutex);
+            xSemaphoreGive(socketDevice.sendOrRecvLock);
         }
 
         if (bytesRead > 0) {

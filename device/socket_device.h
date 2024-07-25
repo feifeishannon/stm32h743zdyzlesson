@@ -46,8 +46,13 @@ typedef struct Socekt_Device
     void *priv_data;
 }Socekt_DeviceType;
 
+typedef struct {
+    int sockfd;
+    SemaphoreHandle_t sendOrRecvLock;
+} SocketDevice;
+
 extern const u8_t lwiperf_txbuf_const[1600];
-extern SemaphoreHandle_t xSocketMutex;
+extern SocketDevice socketDevice;
 
 Socekt_DeviceType *Get_Socekt_Device(char *name);
 int socket_device_init(void);

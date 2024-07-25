@@ -55,7 +55,6 @@ static void tcp_recv_task(void *arg)
             printf("Received response from client %s:%d ¡°%s¡±\n",
                     inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port), buffer);
             xQueueSend(tcp_server.client_data_queue, &buffer, portMAX_DELAY);
-            
         }
     }
 
@@ -88,13 +87,13 @@ static void tcp_send_task(void *arg)
             printf("send response to client %s:%d ¡°%s¡±\n",
                     inet_ntoa(clientInfo->clientAddr.sin_addr), ntohs(clientInfo->clientAddr.sin_port), msg);
             // Free the message buffer
-            vPortFree(msg);
+            memset(msg, 0, sizeof(msg));
         }
         vTaskDelay(1);
     }
 
     // Close the connection
-    lwip_close(clientInfo->client_sock);
+    close(clientInfo->client_sock);
     vTaskDelete(NULL);
 }
 
@@ -103,6 +102,7 @@ static void tcp_send_task(void *arg)
 int tcpServerInit(){
     printf_xMutex = xSemaphoreCreateMutex();
     tcp_server.client_queue = xQueueCreate(10, sizeof(ClientInfo));
+    tcp_server.client_data_queue = xQueueCreate(100, sizeof(ClientInfo));
     if (tcp_server.client_queue == NULL) {
         printf("Failed to create client queue\n");
         return -1;
@@ -204,7 +204,7 @@ static void tcp_listen_task(void *arg){
             close(clientInfo.client_sock);
         } else {
             xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 4096, &clientInfo, 5, NULL);
-            // xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, &clientInfo, 5, NULL);
+            xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, &clientInfo, 5, NULL);
             printf("Client added to queue\n");
         }
         // prvUnlockQueue(tcp_server.client_queue);
