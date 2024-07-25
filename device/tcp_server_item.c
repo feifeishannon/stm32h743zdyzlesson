@@ -44,7 +44,6 @@ static void tcp_recv_task(void *arg)
     while (1)
     {
         bytes_received = recv(clientInfo->client_sock, buffer, sizeof(buffer) - 1, 0);
-        vTaskDelay(1);
         if (bytes_received < 0) {
             continue;
         } else if (bytes_received == 0) {
@@ -60,6 +59,7 @@ static void tcp_recv_task(void *arg)
 
     // Close the connection
     close(clientInfo->client_sock);
+    free(clientInfo);
     vTaskDelete(NULL);
 }
 
@@ -89,7 +89,6 @@ static void tcp_send_task(void *arg)
             // Free the message buffer
             memset(msg, 0, sizeof(msg));
         }
-        vTaskDelay(1);
     }
 
     // Close the connection
@@ -189,22 +188,27 @@ void tcp_server_task_single_client(void *pvParameters) {
 static void tcp_listen_task(void *arg){
     while (1)
     {
-        ClientInfo clientInfo;
-        socklen_t clientLen = sizeof(clientInfo.clientAddr);
-        clientInfo.client_sock = accept(tcp_server.sockfd, (struct sockaddr*)&clientInfo.clientAddr, &clientLen);
-        if (clientInfo.client_sock < 0) {
+        ClientInfo *clientInfo = malloc(sizeof(ClientInfo));
+        socklen_t clientLen = sizeof(clientInfo->clientAddr);
+        if (clientInfo == NULL) {
+            printf("Memory allocation clientInfo failed\n");
+            continue;
+        }
+        clientInfo->client_sock = accept(tcp_server.sockfd, (struct sockaddr*)&clientInfo->clientAddr, &clientLen);
+        if (clientInfo->client_sock < 0) {
+            free(clientInfo);
             printf("Error accepting connection: %d\n", errno);
             continue;
         }
 
         // prvLockQueue(tcp_server.client_queue);
         // 将客户端信息添加到队列
-        if (xQueueSend(tcp_server.client_queue, &clientInfo, portMAX_DELAY) != pdPASS) {
+        if (xQueueSend(tcp_server.client_queue, clientInfo, portMAX_DELAY) != pdPASS) {
             printf("Failed to add client to queue\n");
-            close(clientInfo.client_sock);
+            close(clientInfo->client_sock);
         } else {
-            xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 4096, &clientInfo, 5, NULL);
-            xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, &clientInfo, 5, NULL);
+            xTaskCreate(tcp_recv_task, "TCP_Recv_Task", 4096, clientInfo, 5, NULL);
+            xTaskCreate(tcp_send_task, "TCP_Send_Task", 4096, clientInfo, 5, NULL);
             printf("Client added to queue\n");
         }
         // prvUnlockQueue(tcp_server.client_queue);
