@@ -48,7 +48,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LWIP_DEBUG
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -471,19 +471,19 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-
+  FLASH_OBProgramInitTypeDef flash_OBProgramInitType;
   while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // 启动TCP服务器
     start_tcp_server();
 
     // // 启动TCP客户端
-    // start_tcp_client();
+    start_tcp_client();
 
     // 启动TCP服务器
-    // start_udp_server();
+    start_udp_server();
 
     // 启动TCP客户端
-    // start_udp_client();
+    start_udp_client();
   /* Infinite loop */
   for(;;)
   {
