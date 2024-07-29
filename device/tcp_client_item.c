@@ -24,14 +24,21 @@ int ip_protocol = IPPROTO_IP;
 osThreadId_t sendTaskHandle;
 const osThreadAttr_t sendTask_attributes = {
   .name = "tcpsendTask",
-  .stack_size = 1024 * 4,
+  .stack_size = 1024 * 1,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t recvTaskHandle;
 const osThreadAttr_t recvTask_attributes = {
   .name = "tcprecvTask",
-  .stack_size = 1024 * 4,
+  .stack_size = 1024 * 1,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+osThreadId_t connectTaskHandle;
+const osThreadAttr_t connectTask_attributes = {
+  .name = "connectTask",
+  .stack_size = 1024 * 1,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
@@ -126,6 +133,7 @@ void recvTask(void *pvParameters) {
 void start_tcp_client() {
     if(tcpClientInit()>=0) {
         // Create Send Task
+        // connectTaskHandle
         sendTaskHandle = osThreadNew(sendTask, NULL, &sendTask_attributes);
 
         // Create Recv Task
