@@ -32,6 +32,8 @@
         "udp_server_item.h": "c",
         "cc.h": "c",
         "stdio.h": "c",
-        "arch.h": "c"
+        "arch.h": "c",
+        "stm32h7xx_hal_conf.h": "c",
+        "stm32h7xx_hal_uart.h": "c"
     }
 }

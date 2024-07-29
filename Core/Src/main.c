@@ -435,6 +435,7 @@ void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
+  printf("[%s] %d: start\r\n", __FUNCTION__, __LINE__);
 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
@@ -477,16 +478,16 @@ void enternetStart(void *argument)
   FLASH_OBProgramInitTypeDef flash_OBProgramInitType;
   while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // 启动TCP服务器
-    start_tcp_server();
+    // start_tcp_server();
 
     // // 启动TCP客户端
-    start_tcp_client();
+    // start_tcp_client();
 
     // 启动TCP服务器
-    start_udp_server();
+    // start_udp_server();
 
     // 启动TCP客户端
-    start_udp_client();
+    // start_udp_client();
   /* Infinite loop */
   for(;;)
   {

@@ -21,7 +21,8 @@
 #include "usbd_dfu_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "stdio.h"
+#include "stm32h7xx_hal_uart.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -146,6 +147,7 @@ __ALIGN_BEGIN USBD_DFU_MediaTypeDef USBD_DFU_fops_FS __ALIGN_END =
     MEM_If_GetStatus_FS
 };
 
+extern UART_HandleTypeDef huart1;
 /* Private functions ---------------------------------------------------------*/
 /**
   * @brief  Memory initialization routine.
@@ -154,7 +156,8 @@ __ALIGN_BEGIN USBD_DFU_MediaTypeDef USBD_DFU_fops_FS __ALIGN_END =
 uint16_t MEM_If_Init_FS(void)
 {
   /* USER CODE BEGIN 0 */
-  return (USBD_OK);
+  //printf("Init\r\n");
+	return (USBD_OK);
   /* USER CODE END 0 */
 }
 
@@ -178,6 +181,7 @@ uint16_t MEM_If_Erase_FS(uint32_t Add)
 {
   /* USER CODE BEGIN 2 */
   UNUSED(Add);
+  printf("[%s] %d: Erase=%x\r\n", __FUNCTION__, __LINE__, Add);
 
   return (USBD_OK);
   /* USER CODE END 2 */
@@ -196,6 +200,7 @@ uint16_t MEM_If_Write_FS(uint8_t *src, uint8_t *dest, uint32_t Len)
   UNUSED(src);
   UNUSED(dest);
   UNUSED(Len);
+  printf("[%s] %d: Write dest= %x, len=%d\r\n", __FUNCTION__, __LINE__, *dest, Len);
 
   return (USBD_OK);
   /* USER CODE END 3 */
@@ -215,6 +220,7 @@ uint8_t *MEM_If_Read_FS(uint8_t *src, uint8_t *dest, uint32_t Len)
   UNUSED(src);
   UNUSED(dest);
   UNUSED(Len);
+  printf("[%s] %d: Read src= %x, dest=%x, len=%d\r\n", __FUNCTION__, __LINE__, *src, *dest, Len);
 
   return (uint8_t*)(USBD_OK);
   /* USER CODE END 4 */
@@ -232,6 +238,7 @@ uint16_t MEM_If_GetStatus_FS(uint32_t Add, uint8_t Cmd, uint8_t *buffer)
   /* USER CODE BEGIN 5 */
   UNUSED(Add);
   UNUSED(buffer);
+  printf("[%s] %d: Read Add= %x, Cmd=%x, buffer=%s\r\n", __FUNCTION__, __LINE__, Add, Cmd, buffer);
 
   switch (Cmd)
   {
