@@ -81,9 +81,10 @@ const osThreadAttr_t enternetTask_attributes = {
 osThreadId_t myTaskHandle;
 const osThreadAttr_t myTask_attributes = {
   .name = "myTask",
-  .stack_size = 128 * 4,
+  .stack_size = 128 * 1,
   .priority = (osPriority_t) osPriorityNormal,
 };
+
 
 volatile pcf8574Regs pcf8574_Reg_map;
 
@@ -119,6 +120,10 @@ int fputc(int ch, FILE *f){
     return ch;
 
 }
+
+void Uart1ReceiverTask(void *argument);
+
+void Uart1SenderTask(void *argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -167,14 +172,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  UARTdevice = Get_UART_Device("stm32_uart1");
 
-  UARTdevice->Init(UARTdevice);
   /* USER CODE END 2 */
 
   /* Init scheduler */
   osKernelInitialize();
-
+  
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -203,6 +206,9 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // myTaskHandle = osThreadNew(StartMyTask, NULL, &myTask_attributes);
+
+  xTaskCreate(Uart1SenderTask, "Uart1SenderTask", 512, NULL, 5, NULL);
+  xTaskCreate(Uart1ReceiverTask, "Uart1ReceiverTask", 512, NULL, 5, NULL);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -422,6 +428,34 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+
+void Uart1SenderTask(void *argument)
+{
+  UARTdevice = New_UART_Device("stm32_uart1");
+  UARTdevice->Init();
+  uint8_t cstring[2]={0};
+  for(;;)
+  {
+    UARTdevice->Send("请输入数据============>\r\n");
+    // while (0 != UARTdevice->Recv(&cstring[0]));
+    // UARTdevice->Send(UARTdevice, "接收到：", 10);
+    // UARTdevice->Send(UARTdevice,  cstring, 10);
+    // UARTdevice->Send(UARTdevice,  "\r\n", 10);
+    osDelay(1000);
+    
+  }
+}
+
+void Uart1ReceiverTask(void *argument)
+{
+  uint8_t ch;
+  for(;;)
+  {
+    
+    osDelay(1);
+  }
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -435,7 +469,7 @@ void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
-  printf("[%s] %d: start\r\n", __FUNCTION__, __LINE__);
+  // printf("[%s] %d: start\r\n", __FUNCTION__, __LINE__);
 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
