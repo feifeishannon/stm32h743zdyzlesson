@@ -27,7 +27,8 @@ typedef struct UART_Device
 {
     char *name;
     int (*Init) (void);
-    int (*Send)(const char *format, ...);
+    void (*Send)(const char *format, ...);
+    void (*Sendln)(const char *format, ...);
     int (*Recv)(uint8_t *datas);
     UART_DataType *priv_data;
 }UART_DeviceType;

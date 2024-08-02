@@ -34,7 +34,7 @@
   */
 
 #include "uart_device.h"
-
+#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -43,8 +43,9 @@
 #define QUEUE_LENGTH 20
 
 extern UART_HandleTypeDef huart1;
-static int uart_init();
-static int uart_send(const char *format, ...);
+static int uart_init(void);
+static void uart_send(const char *format, ...);
+static void uart_sendln(const char *format, ...);
 static int uart_recv(uint8_t *datas);
 void uart_tx_task(void *pvParameters);
 
@@ -72,6 +73,7 @@ static UART_DeviceType g_uart1 = {
     "stm32_uart1",
     uart_init,
     uart_send,
+    uart_sendln,
     uart_recv,
     &g_uart1_data,
 };
@@ -109,7 +111,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
     }
 }
 
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     UART_DataType *data;
     if(huart == &huart1) {
@@ -134,7 +135,7 @@ static int uart_init(){
     return 0;
 }
 
-static int uart_send(const char *format, ...){
+static void uart_send(const char *format, ...){
     UART_DataType *data;
     data = g_uart1.priv_data;
     char buffer[UART_TX_QUEUE_LEN];
@@ -144,6 +145,31 @@ static int uart_send(const char *format, ...){
     va_end(args);
     xQueueSend(data->xTxQueue, buffer, portMAX_DELAY);
     
+}
+
+static void uart_sendln(const char *format, ...){
+    UART_DataType *data;
+    data = g_uart1.priv_data;
+    char buffer[UART_TX_QUEUE_LEN];
+    va_list args;
+    va_start(args, format);
+    int len = vsnprintf(buffer, UART_TX_QUEUE_LEN, format, args);
+    va_end(args);
+    if (len < 0) {
+        // Error occurred
+        return;
+    } else if (len == 0) {
+        // No characters were written
+        return;
+    } else if (len < 99) {
+        // 1 to 99 characters were written
+        buffer[len] = '\n';  // Append newline at the end
+        buffer[len + 1] = '\0';  // Null-terminate the string
+    } else {
+        // Exactly 100 characters were written
+        buffer[99] = '\n';  // Replace the last character with newline
+    }
+    xQueueSend(data->xTxQueue, buffer, portMAX_DELAY);
 }
 
 static int uart_recv(uint8_t *datas){

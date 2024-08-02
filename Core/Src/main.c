@@ -172,7 +172,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-
+  UARTdevice = New_UART_Device("stm32_uart1");
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -206,7 +206,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // myTaskHandle = osThreadNew(StartMyTask, NULL, &myTask_attributes);
-
+  UARTdevice->Init();
   xTaskCreate(Uart1SenderTask, "Uart1SenderTask", 512, NULL, 5, NULL);
   xTaskCreate(Uart1ReceiverTask, "Uart1ReceiverTask", 512, NULL, 5, NULL);
 
@@ -431,17 +431,16 @@ static void MX_GPIO_Init(void)
 
 void Uart1SenderTask(void *argument)
 {
-  UARTdevice = New_UART_Device("stm32_uart1");
-  UARTdevice->Init();
+  
   uint8_t cstring[2]={0};
   for(;;)
   {
-    UARTdevice->Send("请输入数据============>\r\n");
+    UARTdevice->Sendln("请输入数据============>");
     // while (0 != UARTdevice->Recv(&cstring[0]));
     // UARTdevice->Send(UARTdevice, "接收到：", 10);
     // UARTdevice->Send(UARTdevice,  cstring, 10);
     // UARTdevice->Send(UARTdevice,  "\r\n", 10);
-    osDelay(1000);
+    osDelay(100);
     
   }
 }
