@@ -38,9 +38,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define UART_RX_QUEUE_LEN 100
-#define UART_TX_QUEUE_LEN 100
-#define QUEUE_LENGTH 20
 
 extern UART_HandleTypeDef huart1;
 static int uart_init(void);
@@ -101,22 +98,41 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
     UART_DataType *data;
     if(huart == &huart1) {
         data = g_uart1.priv_data;
-        data->txCount++;
-        if(data->txCount>=data->txLength){
-            /* 发送数据完成后释放信号量 */
-            data->txCount=0;
-            data->txLength=0;
-            xSemaphoreGiveFromISR(data->xTxSem, NULL);
-        }
+        /* 发送数据完成后释放信号量 */
+        xSemaphoreGiveFromISR(data->xTxSem, NULL);
     }
 }
 
+/**
+ * @brief  接收到100个字符或'\n'时存储到队列中
+ * @note   
+ * @param  *huart: 
+ * @retval None
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     UART_DataType *data;
     if(huart == &huart1) {
         data = g_uart1.priv_data;
-        /* 接收到数据后，将数据写入队列中 */
-        xQueueSendFromISR(data->xRxQueue, &data->rxdata, NULL);
+
+        // 将接收到的字符存入缓冲区
+        if (data->bufferIndex < UART_RX_QUEUE_LEN) {
+            data->rxBuffer[data->bufferIndex++] = data->rxdata;
+        }
+
+        // 检查是否接收到换行符
+        if (data->rxdata == '\n' || data->bufferIndex >= UART_RX_QUEUE_LEN) {
+            // 发送缓冲区的数据到队列
+            xQueueSendFromISR(data->xRxQueue, data->rxBuffer, NULL);
+            
+            // 清空缓冲区
+            memset(data->rxBuffer, 0, UART_RX_QUEUE_LEN);
+            data->bufferIndex = 0;
+        }
+        
+        // 记录当前字符为最后一个字符
+        data->lastChar = data->rxdata;
+
+        // 重新启动接收中断
         HAL_UART_Receive_IT(data->handle, &data->rxdata,1);
     }
 }
@@ -126,7 +142,7 @@ static int uart_init(){
     data = g_uart1.priv_data;
     data->xMutex = xSemaphoreCreateBinary();
     data->xTxSem = xSemaphoreCreateBinary();
-    data->xRxQueue = xQueueCreate(UART_RX_QUEUE_LEN, 1);
+    data->xRxQueue = xQueueCreate(UART_RX_QUEUE_LEN, sizeof(char) * UART_RX_QUEUE_LEN);
     data->xTxQueue = xQueueCreate(QUEUE_LENGTH, sizeof(char) * UART_TX_QUEUE_LEN);
     // 初始时给予信号量
     xSemaphoreGive(data->xTxSem);
@@ -161,13 +177,14 @@ static void uart_sendln(const char *format, ...){
     } else if (len == 0) {
         // No characters were written
         return;
-    } else if (len < 99) {
+    } else if (len < UART_TX_QUEUE_LEN-2) {
         // 1 to 99 characters were written
         buffer[len] = '\n';  // Append newline at the end
         buffer[len + 1] = '\0';  // Null-terminate the string
     } else {
         // Exactly 100 characters were written
-        buffer[99] = '\n';  // Replace the last character with newline
+        buffer[UART_TX_QUEUE_LEN-2] = '\n';  // Replace the last character with newline
+        buffer[UART_TX_QUEUE_LEN-1] = '\0';  // Replace the last character with newline
     }
     xQueueSend(data->xTxQueue, buffer, portMAX_DELAY);
 }

@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "print_device.h"
 #include "string.h"
 #include <stdio.h>
 #include "uart_device.h"
@@ -50,6 +51,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define LWIP_DEBUG
+#define println(...) UARTdevice->Sendln(__VA_ARGS__);
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -102,24 +105,6 @@ void enternetStart(void *argument);
 
 /* USER CODE BEGIN PFP */
 #define Write_Through() (*(__IO uint32_t*)0XE000EF9C=1UL<<2) //Cache透写模式
-
-struct __FILE 
-{
-  int handle; 
-};
-
-FILE __stdout;
-
-void _sys_exit(int x){
-    x = x;
-}
-
-int fputc(int ch, FILE *f){
-    HAL_UART_Transmit_IT(&huart1,(uint8_t *)&ch,1);
-    while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC) == RESET){}
-    return ch;
-
-}
 
 void Uart1ReceiverTask(void *argument);
 
@@ -431,26 +416,26 @@ static void MX_GPIO_Init(void)
 
 void Uart1SenderTask(void *argument)
 {
-  
-  uint8_t cstring[2]={0};
+  uint32_t times=0;
   for(;;)
   {
-    UARTdevice->Sendln("请输入数据============>");
-    // while (0 != UARTdevice->Recv(&cstring[0]));
-    // UARTdevice->Send(UARTdevice, "接收到：", 10);
-    // UARTdevice->Send(UARTdevice,  cstring, 10);
-    // UARTdevice->Send(UARTdevice,  "\r\n", 10);
-    osDelay(100);
+    // UARTdevice->Sendln("请输入数据[%d]============>",++times);
+    // println("请输入数据[%d]============>",++times);
+    osDelay(1000);
     
   }
 }
 
 void Uart1ReceiverTask(void *argument)
 {
-  uint8_t ch;
+  UART_DataType *data;
+  data = UARTdevice->priv_data;
+  char txBuffer[100] = {0};
   for(;;)
   {
-    
+    if (xQueueReceive(data->xRxQueue, txBuffer, portMAX_DELAY) == pdTRUE) {
+      println("接收到数据=>%s", txBuffer);
+    }
     osDelay(1);
   }
 }
@@ -508,7 +493,6 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-  FLASH_OBProgramInitTypeDef flash_OBProgramInitType;
   while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
     // 启动TCP服务器
     // start_tcp_server();

@@ -60,6 +60,7 @@ void StartMyTask(void *argument);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
+extern UART_HandleTypeDef huart1;
 
 /* USER CODE END Private defines */
 

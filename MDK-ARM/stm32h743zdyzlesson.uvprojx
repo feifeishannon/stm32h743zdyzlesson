@@ -1016,6 +1016,11 @@
               <FileType>1</FileType>
               <FilePath>..\device\udp_server_item.c</FilePath>
             </File>
+            <File>
+              <FileName>print_device.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\print_device.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -7702,6 +7707,11 @@
               <FileName>udp_server_item.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\device\udp_server_item.c</FilePath>
+            </File>
+            <File>
+              <FileName>print_device.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\print_device.c</FilePath>
             </File>
           </Files>
         </Group>
