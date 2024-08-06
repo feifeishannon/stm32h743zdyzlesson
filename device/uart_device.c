@@ -89,6 +89,7 @@ UART_DeviceType *New_UART_Device(char *name){
     int i=0;
     for(i = 0 ; i < sizeof(g_uart_devs)/sizeof(g_uart_devs[0]) ; i++){
         if(0 == strcmp(name, g_uart_devs[i]->name))
+            g_uart_devs[i]->Init();
             return g_uart_devs[i];
     }
     return NULL;

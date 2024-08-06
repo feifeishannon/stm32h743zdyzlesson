@@ -50,8 +50,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LWIP_DEBUG
-#define println(...) UARTdevice->Sendln(__VA_ARGS__);
 
 /* USER CODE END PD */
 
@@ -157,7 +155,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  UARTdevice = New_UART_Device("stm32_uart1");
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -191,9 +189,9 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   // myTaskHandle = osThreadNew(StartMyTask, NULL, &myTask_attributes);
-  UARTdevice->Init();
-  xTaskCreate(Uart1SenderTask, "Uart1SenderTask", 512, NULL, 5, NULL);
-  xTaskCreate(Uart1ReceiverTask, "Uart1ReceiverTask", 512, NULL, 5, NULL);
+  UARTdevice = New_UART_Device("stm32_uart1");                              // 内部包含接收线程创建
+  xTaskCreate(Uart1SenderTask, "Uart1SenderTask", 512, NULL, 5, NULL);      // 测试串口设备发送功能
+  xTaskCreate(Uart1ReceiverTask, "Uart1ReceiverTask", 512, NULL, 5, NULL);  // 串口接收信息处理任务
 
   /* USER CODE END RTOS_THREADS */
 

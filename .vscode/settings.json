@@ -37,6 +37,7 @@
         "stm32h7xx_hal_uart.h": "c",
         "stdarg.h": "c",
         "usb_device.h": "c",
-        "print_device.h": "c"
+        "print_device.h": "c",
+        "semphr.h": "c"
     }
 }
