@@ -18,10 +18,11 @@ int fputc(int ch, FILE *f);
  * @note   依赖于实例化的UARTdevice
  * @retval 
  */
- */
-#define println(...)                        \
-    do {                                    \
-        UARTdevice->Sendln(__VA_ARGS__);    \
-    } while (0)
+#define println(...)    UARTdevice->Sendln(__VA_ARGS__)
+
+// #define println(...)                        \
+//     do {                                    \
+//         UARTdevice->Sendln(__VA_ARGS__);    \
+//     } while (0)
 
 #endif /* __PRINT_DEVICE_H */
