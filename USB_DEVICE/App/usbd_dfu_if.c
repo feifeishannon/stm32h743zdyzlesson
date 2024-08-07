@@ -147,7 +147,6 @@ __ALIGN_BEGIN USBD_DFU_MediaTypeDef USBD_DFU_fops_FS __ALIGN_END =
     MEM_If_GetStatus_FS
 };
 
-extern UART_HandleTypeDef huart1;
 /* Private functions ---------------------------------------------------------*/
 /**
   * @brief  Memory initialization routine.

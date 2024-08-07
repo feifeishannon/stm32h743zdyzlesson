@@ -160,7 +160,7 @@ int main(void)
 
   /* Init scheduler */
   osKernelInitialize();
-  
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -342,7 +342,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 1000000;
+  huart1.Init.BaudRate = 921600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -418,7 +418,7 @@ void Uart1SenderTask(void *argument)
   for(;;)
   {
     // UARTdevice->Sendln("请输入数据[%d]============>",++times);
-    // println("请输入数据[%d]============>",++times);
+    println("请输入数据[%d]============>",++times);
     osDelay(1000);
     
   }
@@ -451,7 +451,6 @@ void StartDefaultTask(void *argument)
 {
   /* init code for LWIP */
   MX_LWIP_Init();
-  // printf("[%s] %d: start\r\n", __FUNCTION__, __LINE__);
 
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
