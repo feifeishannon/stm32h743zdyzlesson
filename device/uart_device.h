@@ -16,6 +16,15 @@
 /***
  * 抽象串口数据相关结构
  */
+
+typedef enum System_Type{
+    SYSTEM_TYPE_WINDOWS,
+    SYSTEM_TYPE_LINUX,
+    SYSTEM_TYPE_MACOS,
+    SYSTEM_TYPE_UNIX,
+    SYSTEM_TYPE_OTHER
+} SystemType;
+
 typedef struct UART_Data 
 {
     UART_HandleTypeDef *handle;         // Uart Data 硬件句柄
@@ -29,6 +38,7 @@ typedef struct UART_Data
     uint16_t bufferIndex;               // Uart Data rxBuffer 当前索引
     uint16_t txLength;                  // Uart Data 当前队列节点要发送的数据长度
     uint16_t txCount;                   // Uart Data 当前队列节点已发送的数据长度
+    SystemType osType;                     // 接收到的数据源系统类型 @todo:适配mac===>\r结束符 
 }UART_DataType;
 
 typedef struct UART_Device

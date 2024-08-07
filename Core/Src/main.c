@@ -411,10 +411,10 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+uint32_t times=0;
 
 void Uart1SenderTask(void *argument)
 {
-  uint32_t times=0;
   for(;;)
   {
     // UARTdevice->Sendln("请输入数据[%d]============>",++times);
@@ -429,10 +429,11 @@ void Uart1ReceiverTask(void *argument)
   UART_DataType *data;
   data = UARTdevice->priv_data;
   char txBuffer[100] = {0};
+  
   for(;;)
   {
     if (xQueueReceive(data->xRxQueue, txBuffer, portMAX_DELAY) == pdTRUE) {
-      println("接收到数据=>%s", txBuffer);
+      println("接收到数据[%d]=>%s",times, txBuffer);
     }
     osDelay(1);
   }

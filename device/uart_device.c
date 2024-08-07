@@ -122,6 +122,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
         // 检查是否接收到换行符
         if (data->rxdata == '\n' || data->bufferIndex >= UART_RX_QUEUE_LEN) {
+            // 删除行结束符
+            if (data->bufferIndex > 1 && (data->rxBuffer[data->bufferIndex - 1] == '\n' && 
+                                            data->rxBuffer[data->bufferIndex - 2] == '\r')) {
+                data->rxBuffer[data->bufferIndex-2]=0;
+            }
+                data->rxBuffer[data->bufferIndex-1]=0;
+
             // 发送缓冲区的数据到队列
             xQueueSendFromISR(data->xRxQueue, data->rxBuffer, NULL);
             
@@ -178,12 +185,14 @@ static void uart_sendln(const char *format, ...){
     } else if (len == 0) {
         // No characters were written
         return;
-    } else if (len < UART_TX_QUEUE_LEN-2) {
+    } else if (len < UART_TX_QUEUE_LEN-3) {
         // 1 to 99 characters were written
-        buffer[len] = '\n';  // Append newline at the end
-        buffer[len + 1] = '\0';  // Null-terminate the string
+        buffer[len]   = '\r';  // Append newline at the end
+        buffer[len+1] = '\n';  // Append newline at the end
+        buffer[len+2] = '\0';  // Null-terminate the string
     } else {
         // Exactly 100 characters were written
+        buffer[UART_TX_QUEUE_LEN-3] = '\r';  // Replace the last character with newline
         buffer[UART_TX_QUEUE_LEN-2] = '\n';  // Replace the last character with newline
         buffer[UART_TX_QUEUE_LEN-1] = '\0';  // Replace the last character with newline
     }
