@@ -190,7 +190,7 @@ static void uart_sendln(const char *format, ...){
         buffer[len]   = '\r';  // Append newline at the end
         buffer[len+1] = '\n';  // Append newline at the end
         buffer[len+2] = '\0';  // Null-terminate the string
-    } else {
+    } else if(len >= UART_TX_QUEUE_LEN-3) {
         // Exactly 100 characters were written
         buffer[UART_TX_QUEUE_LEN-3] = '\r';  // Replace the last character with newline
         buffer[UART_TX_QUEUE_LEN-2] = '\n';  // Replace the last character with newline
