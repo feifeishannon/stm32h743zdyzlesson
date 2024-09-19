@@ -62,7 +62,7 @@
   * @{
   */
 
-#define FLASH_DESC_STR      "@Internal Flash   /0x08000000/03*016Ka,01*016Kg,01*064Kg,07*128Kg,04*016Kg,01*064Kg,07*128Kg"
+#define FLASH_DESC_STR      "@Internal Flash   /0x08000000/01*128Ka,07*128Kg,01*128Kg,07*128Kg"
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
 
