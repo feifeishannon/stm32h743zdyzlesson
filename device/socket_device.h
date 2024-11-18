@@ -3,7 +3,39 @@
 
 
 #include "stdint.h"
+#include "lwip/apps/lwiperf.h"
 
+#include "lwip/tcp.h"
+#include "lwip/sys.h"
+#include "string.h"
+#include <stdio.h>
+#include "uart_device.h"
+#include "sockets.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "queue.h"
+
+/**
+ * @brief  lwip各端口默认分配
+ * @note   
+ * @retval None
+ */
+
+#define TCP_DEST_SERVER_IP      "192.168.1.99"
+#define TCP_SRC_SEVER_PORT      5001    
+#define TCP_DEST_SEVER_PORT     5003
+#define TCP_SEND_BUF_SIZE       1024
+#define TCP_RECV_BUF_SIZE       1024
+#define TCP_SEND_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
+#define TCP_RECV_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
+
+#define UDP_DEST_SERVER_IP      "192.168.1.99"
+#define UDP_SRC_SEVER_PORT      5011    
+#define UDP_DEST_SEVER_PORT     5013
+#define UDP_SEND_BUF_SIZE       1024
+#define UDP_RECV_BUF_SIZE       1024
+#define UDP_SEND_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
+#define UDP_RECV_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
 
 typedef struct Socekt_Device
 {
@@ -14,7 +46,16 @@ typedef struct Socekt_Device
     void *priv_data;
 }Socekt_DeviceType;
 
-Socekt_DeviceType *Get_Socekt_Device(char *name);
+typedef struct {
+    int sockfd;
+    SemaphoreHandle_t sendOrRecvLock;
+} SocketDevice;
 
+extern const u8_t lwiperf_txbuf_const[1600];
+extern SocketDevice socketDevice;
+
+Socekt_DeviceType *Get_Socekt_Device(char *name);
+int socket_device_init(void);
+void handle_lwip_error(err_t err);
 
 #endif /* __SOCKET_DEVICE_H */

@@ -828,6 +828,26 @@
               <FileType>1</FileType>
               <FilePath>..\device\lwiperf.c</FilePath>
             </File>
+            <File>
+              <FileName>tcp_client_item.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\tcp_client_item.c</FilePath>
+            </File>
+            <File>
+              <FileName>tcp_server_item.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\tcp_server_item.c</FilePath>
+            </File>
+            <File>
+              <FileName>udp_client_item.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\udp_client_item.c</FilePath>
+            </File>
+            <File>
+              <FileName>udp_server_item.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\device\udp_server_item.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

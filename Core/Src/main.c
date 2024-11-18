@@ -5,6 +5,7 @@
   * @brief          : Main program body
   ******************************************************************************
   * @attention
+  * @todo : 1、增加printf线程和队列功能
   *
   * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
@@ -26,22 +27,28 @@
 #include "string.h"
 #include <stdio.h>
 #include "uart_device.h"
+#include "socket_device.h"
 #include "sockets.h"
 #include "pcf8574.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "queue.h"
 #include "lwip/apps/lwiperf.h"
+#include "tcp_client_item.h"
+#include "tcp_server_item.h"
+#include "udp_client_item.h"
+#include "udp_server_item.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-SemaphoreHandle_t xLWIP_Init;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LWIP_DEBUG
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -173,7 +180,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
-  xLWIP_Init = xSemaphoreCreateBinary();
+
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -236,11 +243,6 @@ void SystemClock_Config(void)
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
-
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -250,7 +252,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 60;
+  RCC_OscInitStruct.PLL.PLLN = 50;
   RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
@@ -275,7 +277,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -297,7 +299,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x307075B1;
+  hi2c2.Init.Timing = 0x10C0ECFF;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -434,13 +436,27 @@ void StartDefaultTask(void *argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
-  xSemaphoreGiveFromISR(xLWIP_Init, NULL);
-
+  static uint16_t ledtimes=0;
+  uint16_t ledblinkcycle=500;
+  uint16_t ledontime=10;
+  uint16_t ledofftime=ledblinkcycle-ledontime;
+  // uint8_t led
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-    osDelay(500);
+    if(ledtimes++ == ledofftime)
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+    else if (ledtimes == ledontime)
+    {
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    } else if (ledtimes == ledblinkcycle)
+    { 
+      ledtimes = 0U;
+    }
+    
+
+    
+    osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -455,83 +471,19 @@ void StartDefaultTask(void *argument)
 void enternetStart(void *argument)
 {
   /* USER CODE BEGIN enternetStart */
-  // int sock = -1;
-  // struct sockaddr_in client_addr;
-  ip4_addr_t ipaddr;
-  while((pdTRUE == xSemaphoreTake(xLWIP_Init, 0)));//网口初始化完成后再执行tcp任务 目测无效
-  HAL_Delay(100);
-  
-  IP4_ADDR(&ipaddr, 192,168,1,99);
-  // char sendbuf[]="test";
-  printf( "enternetStart\r\n");
-  // UARTdevice->Send(UARTdevice, "enternetStart\r\n", 100);
-  
+  FLASH_OBProgramInitTypeDef flash_OBProgramInitType;
+  while (osSemaphoreAcquire(xNetifSemaphore, osWaitForever) != osOK);
+    // 启动TCP服务器
+    start_tcp_server();
 
-  // LOCK_TCPIP_CORE();
-  // lwiperf_start_tcp_server_default(NULL, NULL);
-  // lwiperf_start_tcp_server(&ipaddr, 5001, NULL, NULL);
-  // IP4_ADDR(&remote_addr, 192, 168, 1, 10);
-  while(!lwiperf_start_tcp_client_default(&ipaddr, NULL, NULL)){
-    printf("lwiperf_start_tcp_client_default_fail\r\n");
-    vTaskDelay(100);
+    // // 启动TCP客户端
+    start_tcp_client();
 
-  }
-  // UNLOCK_TCPIP_CORE();
+    // 启动TCP服务器
+    start_udp_server();
 
-  // while (1)
-  // {
-
-  //   sock = socket(AF_INET, SOCK_STREAM, 0);
-  //   static uint8_t i = 0;
-  //   static uint8_t j = 0;
-  //   static uint8_t m = 0;
-  //   if(sock < 0){
-  //     // UARTdevice->Send(UARTdevice, "Socket Error\r\n", 100);
-      
-  //     // printf("Socket Error\r\n");
-  //     vTaskDelay(100);
-  //     i++;
-  //     // printf("Socket err %d times\r\n",i);
-  //     continue;
-  //   }
-
-  //   #define DEST_PORT 5555
-
-  //   client_addr.sin_family = AF_INET;
-  //   client_addr.sin_port = htons(DEST_PORT);
-  //   client_addr.sin_addr.s_addr = ipaddr.addr;
-  //   memset(&(client_addr.sin_zero), 0, sizeof(client_addr.sin_zero));
-    
-  //   if(connect(sock, (struct sockaddr*)&client_addr, sizeof(struct sockaddr)) == -1){
-  //     // UARTdevice->Send(UARTdevice, "Failed to connect\r\n", 100);
-  //     // printf("Failed to connect\r\n");
-
-  //     vTaskDelay(100);
-  //     closesocket(sock);
-  //     vTaskDelay(100);
-  //     j++;
-  //     // printf("connect err %d times\r\n",j);
-  //     continue;
-  //   }
-
-  //   // printf("Connecting\r\n");
-  //   while (1){
-
-  //     if(write(sock,sendbuf,sizeof(sendbuf))<0){
-  //       m++;
-  //       vTaskDelay(1000);
-  //       // printf("write err %d times\r\n",m);
-  //       break;
-  //     }
-  //     m=0;
-  //     vTaskDelay(1000);
-  //   }
-  //   printf("closesocket\r\n");
-  //   closesocket(sock);
-    
-  // }
-  
-  
+    // 启动TCP客户端
+    start_udp_client();
   /* Infinite loop */
   for(;;)
   {
@@ -581,7 +533,7 @@ void MPU_Config(void)
   */
   MPU_InitStruct.Number = MPU_REGION_NUMBER2;
   MPU_InitStruct.BaseAddress = 0x30020000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_256KB;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
   MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
